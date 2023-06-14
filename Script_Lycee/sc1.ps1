@@ -52,7 +52,7 @@ function dlNircmd
 
 function createExecDirectory 
 {
-  if (!(Test-Path -Path "C:\Windows\ExecDirectory"))
+  if (!(Test-Path -Path "C:\Windows\Content"))
   {
     New-Item -ItemType Directory -Path "C:\Windows\Content" -Force
     $Parameters = @{
