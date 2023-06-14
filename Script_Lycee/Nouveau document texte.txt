@@ -1,0 +1,5 @@
+Get-WmiObject Win32_PnPSignedDriver | where {$_.friendlyname -like "Realtek(R) Audio"} |Disable-PnpDevice -Confirm:$false
+Get-WmiObject Win32_PnPSignedDriver | where {$_.friendlyname -like "Realtek(R) Audio"} |Enable-PnpDevice -Confirm:$false
+https://www.osradar.com/install-ocsinventory-debian-10/
+https://www.activpart.com/installer-ocs-inventory-sur-linux-debian-10/
+arret a command longue
