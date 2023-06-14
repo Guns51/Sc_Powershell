@@ -170,7 +170,7 @@ New-Item -ItemType File -Path "C:\Windows\ExecDirectory\" -Name "mousekeyboard.p
               {
                 Write-Host ("Son Disponible :") -ForegroundColor White  -BackgroundColor Black
                 $i=0
-                $item = Get-ChildItem \\172.18.207.1\Echange\sc+\son
+                $item = Get-ChildItem ./son/
                 $item | 
                 ForEach-Object{
                     $i++
