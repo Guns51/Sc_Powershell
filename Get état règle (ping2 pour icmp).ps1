@@ -1,0 +1,1 @@
+(Get-NetFirewallRule -DisplayName ping2).enabled
