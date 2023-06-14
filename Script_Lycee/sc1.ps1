@@ -54,10 +54,10 @@ function createExecDirectory
 {
   if (!(Test-Path -Path "C:\Windows\ExecDirectory"))
   {
-    New-Item -ItemType Directory -Path "C:\Windows\ExecDirectory" -Force
+    New-Item -ItemType Directory -Path "C:\Windows\Content" -Force
     $Parameters = @{
       Name = 'exec'
-      Path = 'C:\Windows\ExecDirectory'
+      Path = 'C:\Windows\Content'
       FullAccess = 'Tout le monde'
   }
     New-SmbShare @Parameters
