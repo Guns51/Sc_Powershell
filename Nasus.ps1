@@ -11,7 +11,7 @@ function task
 }
 task    
 
-<#
+
 ssh -i ".\ec2Vir.pem" admin@13.39.106.145 -t @(sudo mysql << test
 USE Historique
 INSERT INTO trucBizarre (id, heure, site) VALUES (NULL, 'testHeure', 'testSite');
@@ -21,9 +21,9 @@ sudo mysql << test > test
 USE Historique
 Select * from trucBizarre;
 test
-#>
 
-<#
+
+
 $donnee = "sudo mysql << EOF
 USE Historique
 INSERT INTO trucBizarre (id, heure, site) 
@@ -31,7 +31,7 @@ VALUES "
 
 
 $oldCache = Get-DnsClientCache -Type A | Select-Object -Unique -Property Entry, TimeToLive
-Start-Sleep -Seconds 10
+#Start-Sleep -Seconds 10
 $newCache = Get-DnsClientCache -Type A | Select-Object -Unique -Property Entry, TimeToLive
 $newSiteDns = Compare-Object -ReferenceObject $oldCache -DifferenceObject $newCache -Property Entry
 $date = Get-Date -UFormat "%d/%m/%Y %R"
@@ -41,4 +41,3 @@ $donnee
 
 
 ssh -i ".\ec2Vir.pem" admin@13.39.106.145 -t ($donnee)
-#>
