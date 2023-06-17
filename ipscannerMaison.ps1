@@ -1,5 +1,4 @@
 
-
 1..254 | % -Parallel {
     #$status = Test-Connection -TargetName 192.168.191.$_ -Count 1
     if (Test-Connection -TargetName 192.168.1.$_ -Count 1 -Quiet)
@@ -17,3 +16,4 @@
         Write-Host "Success > 192.168.1.$_ > $dnsName > $resultTestSSH"
     }
 } -ThrottleLimit 150
+

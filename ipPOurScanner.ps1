@@ -1,54 +1,95 @@
-$BinaryMask = ""
-
-$maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
-$chiffre0 = 32-$maskCDIR
-
-for ($i = 0; $i -lt $maskCDIR; $i++) 
+function getNetInfo ($choix) #maskCDIR,ipAddress,byteHote
 {
-    $BinaryMask += "1"
-}
+    #$maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
+    $maskCDIR = 23
 
-for ($i = 0; $i -lt $chiffre0; $i++)
+    #$ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
+    $ipAddress = "192.168.5.5"
+
+    $byteHote = 32-$maskCDIR
+
+    switch ($choix) 
+    {
+        "maskCDIR" { return $maskCDIR }
+        "ipAddress" { return $ipAddress }
+        "byteHote" { return $byteHote }
+    }
+}
+function convertMaskCdirToBin #Convertion du CDIR en binaire
 {
-    $BinaryMask += "0"
+    $maskCDIR = getNetInfo "maskCDIR"
+    #Création du mask en binaire grave au CDIR
+    for ($i = 0; $i -lt $maskCDIR; $i++) 
+    {
+        $BinaryMask += "1"
+    }
+
+    $byteHote = getNetInfo "byteHote"
+    for ($i = 0; $i -lt $byteHote; $i++)
+    {
+        $BinaryMask += "0"
+    }
+    return $BinaryMask
+}
+function convertMaskBinToDecimal #retourne le masque en decimal sous forme XXX.XXX.XXX.XXX à partir du binaire
+{
+    $BinaryMask = convertMaskCdirToBin
+    $Octet1 = [Convert]::ToInt32($BinaryMask.Substring(0, 8), 2)
+    $Octet2 = [Convert]::ToInt32($BinaryMask.Substring(8, 8), 2)
+    $Octet3 = [Convert]::ToInt32($BinaryMask.Substring(16, 8), 2)
+    $Octet4 = [Convert]::ToInt32($BinaryMask.Substring(24, 8), 2)
+
+    $DecimalMask = "$Octet1.$Octet2.$Octet3.$Octet4"
+    return $DecimalMask
+}
+function calculNetAddress #retourne addresse ip du réseau
+{
+    $ipAddressSplit = (getNetInfo "ipAddress").Split('.')
+    $maskSplit = (convertMaskBinToDecimal).Split('.')
+
+    $NetworkAddress = @()
+
+    #Operation et logique pour trouver adresse réseau
+    for ($i = 0; $i -lt 4; $i++) {
+        $NetworkAddress += [byte]($ipAddressSplit[$i] -band $maskSplit[$i])
+    }
+    $NetworkAddress = $NetworkAddress -join "."
+    Return $NetworkAddress
+}
+function calculNombreHotes #retourne le nombre d'hote en decimal
+{
+    $byteHote = getNetInfo "byteHote"
+    $nombreHotes = [Math]::Pow(2,$byteHote)-2
+    return $nombreHotes
+}
+function convertAddressIpToBinary #sous forme XXX.XXX.XXX.XXX
+{
+    $adressesplit = $adresseReseau.Split(".")
+    $ipBIN = @()
+    $adressesplit | ForEach-Object{
+        $bindepart = [System.Convert]::ToString($_,2)
+        $binfin=""
+        $bin = 8 - $bindepart.Length
+        for($i=0;$i -lt $bin; $i++){$binfin += "0"}
+        $ipBIN += $binfin + $bindepart
+    }
+    $ipBIN = $ipBIN -join ""
+    return $ipBIN
 }
 
-$Octet1 = [Convert]::ToInt32($BinaryMask.Substring(0, 8), 2)
-$Octet2 = [Convert]::ToInt32($BinaryMask.Substring(8, 8), 2)
-$Octet3 = [Convert]::ToInt32($BinaryMask.Substring(16, 8), 2)
-$Octet4 = [Convert]::ToInt32($BinaryMask.Substring(24, 8), 2)
+$ipAddressBin = convertAddressIpToBinary
+$nombreHotesBin = [Convert]::ToString((calculNombreHotes),2) 
 
-$DecimalMask = "$Octet1.$Octet2.$Octet3.$Octet4"
 
-$ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
-$ipAddressSplit = $ipAddress.Split('.')
-$maskSplit = $DecimalMask.Split('.')
 
-$NetworkAddress = @()
 
-for ($i = 0; $i -lt 4; $i++) {
-    $NetworkAddress += [byte]($ipAddressSplit[$i] -band $maskSplit[$i])
-}
-$NetworkAddress = $NetworkAddress -join "."
-$NetworkAddress
+<#
+$decimalNumber1 = [Convert]::ToInt32($ipAddressBin, 2)
+$decimalNumber2 = [Convert]::ToInt32($nombreHotesBin, 2)
 
-$hotesAvecMasques = @{
-    "30" = 2
-    "29" = 6
-    "28" = 14
-    "27" = 30
-    "26" = 62
-    "25" = 126
-    "24" = 254
-    "23" = 510
-    "22" = 1022
-    "21" = 2046
-    "20" = 4094
-    "19" = 8190
-    "18" = 16382
-    "17" = 32766
-    "16" = 65534
-}
+$sumDecimal = $decimalNumber1 + $decimalNumber2
+$sumBinary = [Convert]::ToString($sumDecimal, 2)
 
-$firstIpAddress = $NetworkAddress
+Write-Host "Binary sum: $sumBinary"
+#>
 
