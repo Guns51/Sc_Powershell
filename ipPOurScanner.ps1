@@ -116,3 +116,5 @@ Write-Host "Binary sum: $sumBinary"
 #>
 
 #      0000010000000000
+
+regarder += var
