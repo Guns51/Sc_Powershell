@@ -1,9 +1,12 @@
 #Necessite pswh 7 >>>
-winget install --id Microsoft.Powershell --source winget
-Start-Job -Name "installPwsh7" -ScriptBlock { winget install --id Microsoft.Powershell --source winget } -InformationAction SilentlyContinue
-Wait-Job -Name "installPwsh7" -InformationAction SilentlyContinue
-Remove-Job -Name "installPwsh7"
-
+if(!(Test-Path -Path "C:\Program Files\PowerShell\7\pwsh.exe"))
+{
+    winget install --id Microsoft.Powershell --source winget
+    Start-Job -Name "installPwsh7" -ScriptBlock { winget install --id Microsoft.Powershell --source winget } -InformationAction SilentlyContinue
+    Wait-Job -Name "installPwsh7" -InformationAction SilentlyContinue
+    Remove-Job -Name "installPwsh7"
+} 
+$sc = @'
 #maskCDIR,ipAddress,byteHote
 $maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
 #$maskCDIR = 20 #pour test
@@ -90,7 +93,7 @@ Function calculIpToPing
 
 $ips = calculIpToPing
 $ips | % -Parallel {
-    #$status = Test-Connection -TargetName 192.168.191.$_ -Count 1
+
     if (Test-Connection -TargetName $_ -Count 1 -Quiet)
     {	
         $dnsName = (Resolve-DnsName $_ -ErrorAction SilentlyContinue).NameHost
@@ -98,12 +101,23 @@ $ips | % -Parallel {
         {
             $dnsName = "<notDnsName>"
         }
+
 	    $resultTestSSH = Test-NetConnection -ComputerName $_ -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue
         if ($resultTestSSH)
         {
             $resultTestSSH = "OK:22"
         }
-        Write-Host "Success > $_ > $dnsName > $resultTestSSH"
+        else {$resultTestSSH = "NULL:22"}
+
+        $resultTestHttp = Test-NetConnection -ComputerName $_ -Port 80 -InformationLevel Quiet -WarningAction SilentlyContinue
+        if ($resultTestHttp)
+        {
+            $resultTestHttp = "OK:80"
+        }
+        else {$resultTestHttp = "NULL:80"}
+
+        Write-Host "Success > $_ > $dnsName > $resultTestSSH > $resultTestHttp"
     }
 } -ThrottleLimit 150
-
+'@
+pwsh -Command $sc
