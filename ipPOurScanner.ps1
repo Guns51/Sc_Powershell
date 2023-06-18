@@ -1,10 +1,8 @@
 function getNetInfo ($choix) #maskCDIR,ipAddress,byteHote
 {
-    #$maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
-    $maskCDIR = 20
+    $maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
 
-    #$ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
-    $ipAddress = "192.168.40.250"
+    $ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
 
     $byteHote = 32-$maskCDIR
 
@@ -77,46 +75,40 @@ function convertNetworkAddressIpToBinary #sous forme XXX.XXX.XXX.XXX
     $ipBIN = $ipBIN -join ""
     return $ipBIN
 }
-
-function calculPartHote # retourne la partie hote pour la calcul de lip de debut et fin
+Function calculFirstIp
 {
-    $NetworkAddressBin = convertNetworkAddressIpToBinary
+    $decimalNumber1 = [Convert]::ToInt64((convertNetworkAddressIpToBinary), 2)
+    $decimalNumber2 = 1
 
-    $Octet1 = $NetworkAddressBin.Substring(0, 8)
-    $Octet2 = $NetworkAddressBin.Substring(8, 8)
-    $Octet3 = $NetworkAddressBin.Substring(16, 8)
-    $Octet4 = $NetworkAddressBin.Substring(24, 8)
+    $lastPartHoteDecimal = $decimalNumber1 + $decimalNumber2
+    $lastPartHoteBin = [Convert]::ToString($lastPartHoteDecimal, 2) #derniere ip partie hote en binaire
 
-    $byteHoteLength = getNetInfo "byteHote"
-    
-    if (($byteHoteLength)%8 -ne 0)
-    {
-        $reste = ($byteHoteLength)%8
-        $byteHote = 8-$reste
-        $byteHoteLength = $byteHoteLength+$byteHote
-    }
+    $Octet1 = [Convert]::ToInt64($lastPartHoteBin.Substring(0, 8), 2)
+    $Octet2 = [Convert]::ToInt64($lastPartHoteBin.Substring(8, 8), 2)
+    $Octet3 = [Convert]::ToInt64($lastPartHoteBin.Substring(16, 8), 2)
+    $Octet4 = [Convert]::ToInt64($lastPartHoteBin.Substring(24, 8), 2)
 
-    switch ($byteHoteLength) 
-    {
-        8 {return $Octet4}
-        16 { return $Octet3+$Octet4}
-        24 { return $Octet2+$Octet3+$Octet4}
-    }
+    $firstIp = "$Octet1.$Octet2.$Octet3.$Octet4"
+    Write-Host "Première ip: $firstIp"
 }
+Function calculLastIp
+{
+    $decimalNumber1 = [Convert]::ToInt64((convertNetworkAddressIpToBinary), 2)
+    $decimalNumber2 = calculNombreHotes
 
+    $lastPartHoteDecimal = $decimalNumber1 + $decimalNumber2
+    $lastPartHoteBin = [Convert]::ToString($lastPartHoteDecimal, 2) #derniere ip partie hote en binaire
 
-$decimalNumber1 = [Convert]::ToInt64((convertNetworkAddressIpToBinary), 2)
-$decimalNumber2 = calculNombreHotes
+    $Octet1 = [Convert]::ToInt64($lastPartHoteBin.Substring(0, 8), 2)
+    $Octet2 = [Convert]::ToInt64($lastPartHoteBin.Substring(8, 8), 2)
+    $Octet3 = [Convert]::ToInt64($lastPartHoteBin.Substring(16, 8), 2)
+    $Octet4 = [Convert]::ToInt64($lastPartHoteBin.Substring(24, 8), 2)
 
-$lastPartHoteDecimal = $decimalNumber1 + $decimalNumber2
-$lastPartHoteBin = [Convert]::ToString($lastPartHoteDecimal, 2) #derniere ip partie hote en binaire
-
-$Octet1 = [Convert]::ToInt64($lastPartHoteBin.Substring(0, 8), 2)
-$Octet2 = [Convert]::ToInt64($lastPartHoteBin.Substring(8, 8), 2)
-$Octet3 = [Convert]::ToInt64($lastPartHoteBin.Substring(16, 8), 2)
-$Octet4 = [Convert]::ToInt64($lastPartHoteBin.Substring(24, 8), 2)
-
-Write-Host "derniere ip: $Octet1.$Octet2.$Octet3.$Octet4"
+    $LastIp = "$Octet1.$Octet2.$Octet3.$Octet4"
+    Write-Host "derniere ip: $LastIp"
+}
 
 $NetworkAddress = calculNetAddress
 Write-Host "ADD Network: $NetworkAddress"
+calculFirstIp
+calculLastIp
