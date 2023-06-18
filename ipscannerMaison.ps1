@@ -1,3 +1,9 @@
+#Necessite pswh 7 >>>
+winget install --id Microsoft.Powershell --source winget
+Start-Job -Name "installPwsh7" -ScriptBlock { winget install --id Microsoft.Powershell --source winget } -InformationAction SilentlyContinue
+Wait-Job -Name "installPwsh7" -InformationAction SilentlyContinue
+Remove-Job -Name "installPwsh7"
+
 #maskCDIR,ipAddress,byteHote
 $maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
 #$maskCDIR = 20 #pour test
