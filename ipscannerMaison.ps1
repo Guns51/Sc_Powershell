@@ -6,7 +6,8 @@ if(!(Test-Path -Path "C:\Program Files\PowerShell\7\pwsh.exe"))
     Wait-Job -Name "installPwsh7" -InformationAction SilentlyContinue
     Remove-Job -Name "installPwsh7"
 } 
-$sc = @'
+
+pwsh -Command {
 #maskCDIR,ipAddress,byteHote
 $maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
 #$maskCDIR = 20 #pour test
@@ -119,5 +120,4 @@ $ips | % -Parallel {
         Write-Host "Success > $_ > $dnsName > $resultTestSSH > $resultTestHttp"
     }
 } -ThrottleLimit 150
-'@
-pwsh -Command $sc
+}
