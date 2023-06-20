@@ -11,7 +11,7 @@ function task
 }
 task    
 
-
+##########
 ssh -i ".\ec2Vir.pem" admin@13.39.106.145 -t @(sudo mysql << test
 USE Historique
 INSERT INTO trucBizarre (id, heure, site) VALUES (NULL, 'testHeure', 'testSite');
@@ -21,7 +21,7 @@ sudo mysql << test > test
 USE Historique
 Select * from trucBizarre;
 test
-
+#######
 
 
 $donnee = "sudo mysql << EOF
