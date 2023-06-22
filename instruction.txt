@@ -1,0 +1,14 @@
+#install sshd sur distant
+#creation paire de clé
+#transfert cle privée dans %localappdata%/content/                                             %localappdata%/content/ === dossier principal du script
+#tranfert cle publique dans authorized_keys
+#set les droit en fonction du compte pour (/authorized_keys ou /administrators_authorized_keys) et clé privée
+#modification de sshd_config >>> modifier emplacement d'  /authorized_keys  et  /administrators_authorized_keys
+
+#Savoir si admin
+#$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+#$windowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($currentUser)
+#$isAdmin = $windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+
+New-Item -ItemType File -Path "$env:LOCALAPPDATA/content/" -Name "SC.ps1" -Value $sc -Force
+

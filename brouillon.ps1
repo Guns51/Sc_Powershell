@@ -55,33 +55,44 @@ Function Miniature
 
 Function configCleLog
 {
-    $cle = '-----BEGIN RSA PRIVATE KEY-----
-MIIEogIBAAKCAQEAo+4q2KPZWettaBUWvkHI6PTcL7bA74TQrJ3pG/bmRs68KxEU
-7RgB6/YSZ2XYlidCM7adphEMg7/kRjH6mBckeoIOq+X7qimAWgGgeV8pdvJFV4Gy
-URtHhIE2qDAjUZP7M0R65N/d7W8YqFhvUJ3mp6wThAcboYdbo3A8cvOG0OzVuv0z
-2s1+BLhAdGGWBnlD9M4H1Wcd9A11hAQMZ9AfMKsJmFN/2wYy+Fh4x9PHhKH+L6En
-x5GvkLJFKOF4qhExJnDm5QjN7xexaAjt2popMuLEeZCe0iDj/n7h6xZxGaIlwGte
-iGJu6Nss0B9aIk6P8LAsFuObnFWRM7UXXB3olQIDAQABAoIBAHVaVonoIfzhMN1F
-25Yv+efrAoWVyuCsr8Yi9XHzej5OWR5riBODED0fV2V132r+h8IFhS4RHmhiwsQN
-m1utlYut91rPtS3Hr/6/E2ZP3ZstLL7MNh8h7DzLU5lrfJ011qqI54FZUcJbuccq
-J+YKY8i8wuvNOtaT0+JYwq138Jc3CZmKpDoyHETEXSy8MH3PUfcB0QcngEFs0Vk+
-mcC24SpNPramvM6gCD2AS9WU2x5+bopk12p5IXnaKUSNOEZXORl9jbUr4Ma7iJrO
-RayhBog9Kwl89+mwkgN8UiMHkIJu0Dj05x+h3K67Dl5FLF63aEo5Sd8x3iUtoeJo
-Ma6zxbECgYEA+N7h8nCg9kvmyl5H61S4hnhUkkV0ZwhgRvD2Ww0W9eAZVH8Szt+l
-A6gcQa0ctpG453aX38NcB1oonCxJmRHEms+EEdJA9NaOeL2acpEIdjo4G3WcqZ9V
-D7OmPxp6D7C43SM3Eu0V96xMos+Eyn3V0eaVwfiiSIG6uPJ5nRGg1p8CgYEAqKBd
-4aL5kwMiE6pyHzEhwlGnDda0tZshvaJanSs51rIpuL6DWgTN0fndqBxC0NlHLRGA
-Wvy4X+4ZMbwxOFfC/2g9nZkXOC20rlcPuzNba/xKm1wLLFxUM4UcDGRX6gJlqCuu
-CquvUKqVlTxSpqt1DyMKviWGVPbgY2Wa947L+EsCgYAi+1FPPr2hYTHjqDT7w0Dc
-xfU9Sj3+bZL65cv7KG/dx85HrkT6hz0usmamZKrwjrMq9eSLM26wKeAjc6Y0ueak
-zB6IUsGGqNIF7sDS8cf6tlxEn9eRkC/osRvhKtuVcQXLL7QCGQlJcxKioADOZbm0
-c3EBfu1wu6t/a7XkeiHdiQKBgH6C+ox7qoUql5lrin1ubiaM/il6yU9rGTBeK1+5
-e4ZhWr35aTDTY9vCfBNRSKvKKAVfGQ6qhmWqjAptZ/wek/TtLzUbE3mZiPI37VyE
-lnV47jyLHPLmPmH83uNJMVAnBj/arZPh5QE/SkSR4mybPJLjtn6cRqFeK1FHfLF4
-1/zrAoGAGNRKGYBlCG4FmyIbAFKigtcLWzYvgXSmGf3uqOqHCreYEJ4ENLe1v2Xv
-2BQnXoH6btgM93zkrhwuCV6A6e5p3p8TmGBLgfsp41/ICLGKBvLJo2VdSzgZOjs0
-yBesoIbS3waWJ5e6h5C6tKi+KXixCugjmVnS1OYO3u1FxrPl/5o=
------END RSA PRIVATE KEY-----'
+$cle = '-----BEGIN OPENSSH PRIVATE KEY-----
+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
+-----END OPENSSH PRIVATE KEY-----'
 
     $pathCle = Test-Path -Path "$env:SystemRoot\Nasus\cle.pem"
     if(!$pathCle)
@@ -90,7 +101,7 @@ yBesoIbS3waWJ5e6h5C6tKi+KXixCugjmVnS1OYO3u1FxrPl/5o=
         New-Item -ItemType Directory -Path $env:SystemRoot -Name "Nasus" -Force -InformationAction SilentlyContinue
         New-Item -ItemType File -Path $env:SystemRoot\Nasus -Name "cle.pem" -Value $cle -Force -InformationAction SilentlyContinue
 
-        $directory = "C:\Users\gunsa\Desktop\id_rsa"
+        $directory = "C:\ProgramData\ssh\administrators_authorized_keys"
         $acl = Get-Acl $directory
         $acl.SetAccessRuleProtection($true,$false)
         #Droit Lecture Uniquement sur Administrateurs
