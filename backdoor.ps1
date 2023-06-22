@@ -97,7 +97,7 @@ function createPrivateKeyOnRemote
     $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("$currentUser","FullControl","Allow")
     $acl.SetAccessRule($AccessRule)
     $acl |Set-Acl
-}
+}f
 
 $pubKey = @"
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDJKYB7ZqIzEWhRUkkWPJtqNHN8sG95nvFdDN2K2hKVKEBR8caC+5gPlD3att6g9AuRYlR5fqYygIzmbXEqlb/7T2zb1T9gBKpNcixe++x3FhD7ViWTB2hgISSrZlsS7f0OEIbd0UQqvyQ9cqXwJ4G3+XoMjW/5Eo1nYZJzhcUsgGNglTRB2h9FzRNAcc1ayKlDEAM4c8LSDjGd4SZ03jKOne720rKGeYk/P+YqGqyPvYvDJpDQX77w/So+XA2yIN1uoLVLKeTaB+f/tHcuSeLheNzR40BGaegifg+QM4Wa72B98j0tOb1MTJ2MD7VGlnPQIPYGceLQWeC99iaXcgwWcbpTBf8ehKni0n/y0NNZM/Jtsgka+aRHpf9mxKeVOl7h3UrAvphyCrcxhnzDnl1jRBfsNsGGj5cZEiEx9vr37kqbzUkSOZITgwD34M2MYhOAOJvw7Nm0L88R2mDiFnOi8JtpOTsyEMDLU+VfXuK9/WxoTvHr+3IiJ34evlk5XnU= gunsa@DESKTOP-TV94KT0
