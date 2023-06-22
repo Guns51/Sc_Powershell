@@ -94,7 +94,7 @@ function createPrivateKeyOnRemote
     $directory = "$Global:contentDirectory/id_rsa"
     $acl = Get-Acl $directory
     $acl.SetAccessRuleProtection($true,$false)
-    $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("$currentUser","Read","Allow")
+    $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("$currentUser","FullControl","Allow")
     $acl.SetAccessRule($AccessRule)
     $acl |Set-Acl
 }
