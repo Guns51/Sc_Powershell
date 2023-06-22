@@ -85,8 +85,8 @@ WYUrXcYWx0333ZAAAAFWd1bnNhQERFU0tUT1AtVFY5NEtUMAECAwQF
 
 function createPrivateKeyOnRemote 
 {
-    #Creation cle privee sur pc distant
-    New-Item -Path "$Global:contentDirectory/id_rsa" -Value $privateKey -Force
+    #Creation cle privee sur pc distant avec utf8
+    $privateKey | Out-File "$Global:contentDirectory/id_rsa" -Encoding utf8 -Force
 
     $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 
