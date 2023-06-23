@@ -34,6 +34,7 @@ function installSshd
             #Write-Host("Service Demarré")
         }
     }
+    Start-Sleep -Seconds 5
 }
 
 $Global:contentDirectory = "$env:LOCALAPPDATA/content"
@@ -166,6 +167,11 @@ $sshArgs = @(
     '-R', '6666:localhost:22',
     '-i', "$env:LOCALAPPDATA/content/id_rsa"
 )
+
+start-job -Name "rebootSSHD" -ScriptBlock {Restart-Service -Name sshd}
+Wait-Job -Name "rebootSSHD"
+Start-Sleep -Seconds 3 
+
 
 Start-Process -WindowStyle Hidden -FilePath 'ssh' -ArgumentList $sshArgs
 
