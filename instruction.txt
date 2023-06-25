@@ -6,9 +6,9 @@
 #modification de sshd_config >>> modifier emplacement d'  /authorized_keys  et  /administrators_authorized_keys
 
 #Savoir si admin
-#$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-#$windowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($currentUser)
-#$isAdmin = $windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+$windowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($currentUser)
+$isAdmin = $windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
 
 New-Item -ItemType File -Path "$env:LOCALAPPDATA/content/" -Name "SC.ps1" -Value $sc -Force
 

