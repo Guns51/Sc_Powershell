@@ -23,8 +23,16 @@ Import-Module MySQLite    #Alternatively, Import-Module \\Path\To\MySQLite
 # Import Bouncy Castle Classes
 Get-Package 'Portable.BouncyCastle' | ForEach-Object { Add-Type -LiteralPath ($_.Source | Split-Path | Get-ChildItem -Filter 'netstandard*' -Recurse -Directory | Get-ChildItem -Filter *.dll -Recurse -File ).FullName }
 # Specify for which domain you want to retrieve cookies
-$domain = 'mavaddat.ca'
-$cookiesPath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Network\Cookies" # "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Network\Cookies" # "$env:APPDATA\Opera Software\Opera Stable\Cookies"
+$domain = 'tttt'
+
+Write-Host "[1] Chrome"
+Write-Host "[2] Edge"
+$cookiesPath = Read-Host('Input "1" OR "2"')
+switch ($cookiesPath) 
+{
+    1 { $cookiesPath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Network\Cookies" }
+    2 { $cookiesPath = "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Network\Cookies" }
+}
 
 # Investigate the db structure
 Get-MySQLiteTable -Path $cookiesPath -Detail
