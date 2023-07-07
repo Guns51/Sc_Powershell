@@ -11,7 +11,7 @@ pwsh -Command {
 #maskCDIR,ipAddress,byteHote
 $maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
 #$maskCDIR = 20 #pour test
-[string]$ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
+$ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
 #$ipAddress = "172.18.203.15" #pour test
 $byteHote = 32-$maskCDIR
 
@@ -90,7 +90,6 @@ Function calculIpToPing
     }
 }
 
-$macAddressLocalhost = (Get-NetIPConfiguration | ? "NetProfile").NetAdapter.MacAddress
 $ips = calculIpToPing
 $ips | % -Parallel {
 
@@ -103,10 +102,9 @@ $ips | % -Parallel {
             $dnsName = "<notDnsName>"
         }
         #####################################Get-AddressMac##############################################
+        $ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
         if ($_ -ne $ipAddress)
         {
-            ($_).gettype()
-            ($ipAddress).GetType()
             $addressMac = (Get-NetNeighbor -IPAddress $_ -InformationAction SilentlyContinue).LinkLayerAddress
             if ($addressMac -eq "00-00-00-00-00-00")
             {
@@ -114,7 +112,7 @@ $ips | % -Parallel {
             }
         }else 
         {
-            $addressMac = $macAddressLocalhost
+            $addressMac =  (Get-NetIPConfiguration | ? "NetProfile").NetAdapter.MacAddress
         }
         ######################################Get-CoSSH##################################################
 	    $resultTestSSH = Test-NetConnection -ComputerName $_ -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue
