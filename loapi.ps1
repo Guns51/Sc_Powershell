@@ -1,4 +1,4 @@
-﻿$key = 'RGAPI-27102097-910e-4140-889d-4791e4200024'
+﻿$key = 'RGAPI-0dad533b-0e8d-4e53-a6cf-b60f50aaff33'
 $nomJoueur = "PietraDelFall"
 
 $gameMode = @{
@@ -60,7 +60,7 @@ function getIDGame($nomGameMode)
     
     $puid = IDorPUID("puid")
     $IntMode = $gameMode.$nomGameMode
-    $params = "ids?queue=$IntMode&start=0&count=20"
+    $params = "ids?queue=$IntMode&start=0&count=15"
     $url = "https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/$puid/$params"
     Invoke-RestMethod -Uri $url -Headers $headers | ForEach-Object{$tabIDGame+= @($_)}
     Return $tabIDGame
