@@ -3,6 +3,15 @@ if(!(Get-Process -Name LeagueClientUx -ErrorAction SilentlyContinue))
     Write-Warning $Error[0].Exception.Message
     exit    
 }
+
+#creation dossier de log
+try {
+    New-Item -ItemType Directory -Name "AppStatLol" -Path "$env:ProgramData" -ErrorAction SilentlyContinue
+    New-Item -ItemType File -Name "resultStat.csv" -Path "$env:ProgramData\AppStatLol" -ErrorAction SilentlyContinue
+}
+catch {
+    Write-Error $_.Exception.Message
+}
 #######################################################################################################################
 Add-Type @"
     using System.Net;
@@ -24,8 +33,8 @@ function GET
 }
 function POST 
 {
-    param([string]$endPoint)
-    Invoke-RestMethod -Uri "https://127.0.0.1:$appPort$endPoint" -Method Post -Headers $headers -ErrorAction Stop
+    param([string]$endPoint,$ErrorState)
+    Invoke-RestMethod -Uri "https://127.0.0.1:$appPort$endPoint" -Method Post -Headers $headers -ErrorAction $ErrorState
 }
 function PUT 
 {
@@ -84,7 +93,16 @@ function mainSwitch
             #si recherche une partie
             "Matchmaking" {$_;<# Vide #>;break}
             #si partie trouvée : Accepter
-            "ReadyCheck" {$_;POST /lol-matchmaking/v1/ready-check/accept;break}
+            "ReadyCheck" {
+                $_
+                #envoie des post en boucles meme si queue deja accept
+                try {
+                    POST /lol-matchmaking/v1/ready-check/accept -ErrorState Ignore
+                    POST /lol-lobby-team-builder/v1/ready-check/accept -ErrorState Ignore
+                }
+                catch {Write-Warning "postGame(possible fail)"}
+                break
+            }
             #si dans champ select
             "ChampSelect" {$_;Start-Sleep -Seconds 3;break}
             #si dans la game
@@ -93,7 +111,8 @@ function mainSwitch
                 $gameSession = (GET /lol-gameflow/v1/session)
                 #type de game
                 $typeGame = $gameSession.gamedata.queue.id
-                
+                #id de game
+                $gameId = $gameSession.gameData.gameId
                 #si type de game est une draft ou ranked :
                 if($typeGame -cin "400","420","440") #{400 = 5v5 Draft Pick games; 420 = RANKED_SOLO_5x5; 440 = 5v5 Ranked Flex games}
                 {
@@ -270,12 +289,45 @@ function mainSwitch
                                         $position = $statsCombine
                         } 
                         
-                      }
+                        }
                     }
-                    Write-Host ($tableauStats |ConvertTo-Json -Depth 15)
+
+                    function calculGlobalStats
+                    {
+                        $tableauStats["resume"] = @{}
+                        $tableauStats.keys -match "team" | %{
+                            $teamGlobalStats = $_
+                            "ChampionSummary","PositionSummary","QueueSummary" | % {
+                                $facteurTotal = 0
+                                $nbPlayedTotal = 0
+                                $summaryTree = $_
+                                "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | % {
+                                    $positionTree = $_
+                                    $winrate = $tableauStats."$($teamGlobalStats)".$($positionTree).$($summaryTree).winrate
+                                    #Write-Host $winrate 'winrate'
+                                    if($winrate -eq "NULL"){continue}
+                                    #retirer le "%"
+                                    [int]$intWinrate = ($winrate | Select-String -Pattern '\d+' -AllMatches).Matches.Value
+                                    [int]$nbPlayed = $tableauStats."$($teamGlobalStats)".$($positionTree).$($summaryTree).nbPlayed
+                                    #Write-Host $nbPlayed 'nbPlayed'
+                                    [int]$nbPlayedTotal += $nbPlayed
+                                    #Write-Host $nbPlayedTotal 'nbPlayedTotal'
+                                    [int]$facteurTotal += ($intWinrate*$nbPlayed)
+                                    #Write-Host $facteurTotal 'facteurTotal'
+                                }
+                                $resumePourcentage = [math]::Round($facteurTotal/$nbPlayedTotal)
+                                $tableauStats["resume"][$teamGlobalStats] += @{"$_" = [string]$resumePourcentage + "%"}
+                            }  
+                        }
+                    }
+                    calculGlobalStats
+
+                    Write-Host "debut display"
                     ############################--------debut bloc pour affichage final---------------################################
+
                     $display = {
                         param($tableauStats)
+                        try {
                         Add-Type -AssemblyName System.Windows.Forms
                         Add-Type -AssemblyName System.Drawing
                         # Créer une fenêtre Windows Forms
@@ -307,15 +359,16 @@ function mainSwitch
                                 $node.Expand()
                             }else{$node.Collapse()}
                         })
-
+                    
                         # Ajouter des nœuds au TreeView
                         $rootNodeResume = $treeView.Nodes.Add("Resume")
                         $rootNode = $treeView.Nodes.Add("Game")
                         $rootNode.BackColor = [System.Drawing.Color]::DarkBlue
                         $rootNode.ForeColor = [System.Drawing.Color]::LightCyan
-                        $tableauStats.keys | %{
+                        $tableauStats.keys -match "team" | %{
                             $teamTree = $_
                             $childNode = $rootNode.Nodes.Add("$_") #teams
+                            #$tabForStatsPostGame = @{}
                             ##############################---Arbre "GAME"---#########################################
                             "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | % {
                                 $positionTree = $_
@@ -329,7 +382,7 @@ function mainSwitch
                                         $childNode4 = $childNode3.Nodes.Add($tableauStats."$($teamTree)".$($positionTree).$($summaryTree).$($typeStatTree))
                                         if($typeStatTree -eq "winrate"){
                                             $childNode3.Expand()
-                                            $pourcentage = ($childNode4 |Select-String -Pattern '\d+' -AllMatches).Matches.Value
+                                            [int]$pourcentage = ($childNode4 |Select-String -Pattern '\d+' -AllMatches).Matches.Value
                                             Write-Host $pourcentage
                                             $childNode4.NodeFont = New-Object Drawing.Font("Bahnschrift Light",13,[Drawing.FontStyle]::Bold)
                                             if($pourcentage -lt 50 )
@@ -347,28 +400,13 @@ function mainSwitch
                                 }
                             }
                             ##############################---Fin Arbre "GAME"---#########################################
+                    
                             ##############################---Arbre "Resume"---#########################################
-                            $rootNodeResume2 = $rootNodeResume.Nodes.Add("$_")
+                            
+                            $rootNodeResume2 = $rootNodeResume.Nodes.Add("$_")#teams
                             "ChampionSummary","PositionSummary","QueueSummary" | % {
-                                $facteurTotal = 0
-                                $nbPlayedTotal = 0
-                                $summaryTree = $_
                                 $rootNodeResume3 = $rootNodeResume2.Nodes.Add("$_") #"ChampionSummary","PositionSummary","QueueSummary"
-                                "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | % {
-                                    $positionTree = $_
-                                    $winrate = $tableauStats."$($teamTree)".$($positionTree).$($summaryTree).winrate
-                                    #Write-Host $winrate 'winrate'
-                                    if($winrate -eq "NULL"){continue}
-                                    [int]$intWinrate = ($winrate | Select-String -Pattern '\d+' -AllMatches).Matches.Value
-                                    Write-Host $intWinrate 'intwinrate'
-                                    [int]$nbPlayed = $tableauStats."$($teamTree)".$($positionTree).$($summaryTree).nbPlayed
-                                    #Write-Host $nbPlayed 'nbPlayed'
-                                    [int]$nbPlayedTotal += $nbPlayed
-                                    #Write-Host $nbPlayedTotal 'nbPlayedTotal'
-                                    [int]$facteurTotal += ($intWinrate*$nbPlayed)
-                                    #Write-Host $facteurTotal 'facteurTotal'
-                                }
-                                $resumePourcentage = [math]::Round($facteurTotal/$nbPlayedTotal)
+                                $resumePourcentage = $tableauStats.resume.$teamTree.$_
                                 $rootNodeResume4 = $rootNodeResume3.Nodes.Add([string]$resumePourcentage + "%")
                                 $rootNodeResume4.NodeFont = New-Object Drawing.Font("Bahnschrift Light",13,[Drawing.FontStyle]::Bold)
                                 if($resumePourcentage -lt 50 )
@@ -382,23 +420,32 @@ function mainSwitch
                                     }else{$rootNodeResume4.ForeColor = [System.Drawing.Color]::Yellow}
                                 }
                             }
+                            
                             ##############################---Fin Arbre "Resume"---#########################################
                         }
                         $rootNodeResume.Expand() # Dérouler le nœud racine
-
+                    
                         # Ajouter le TreeView à la fenêtre
                         $form.Controls.Add($treeView)
-                        # Afficher la fenêtre
                         $form.ShowDialog()
+                        }
+                        catch{return $_}
                     }
-                        
+                     
                     Start-Job -ScriptBlock $display -ArgumentList $tableauStats
                     ############################--------fin bloc affichage----------################################################################
+                    #################################---Pour Statistic post game---######(Actuellement dans foreach de TEAM)####################################
+
+                    #enc ccouurrss
+
+                    #################################---Pour Statistic post game (FIN)---##########################################
                     #une fois la recuperation des stats effectuées : attendre la fin de la game
                     while($true)
                     {   #si le status est InProgress attendre 
                         if(((Receive-Job jobState)| select -Last 1) -cnotin "InProgress")
                         {
+                            Start-Sleep -Seconds 2
+                            $resultGameForTeam100 = (GET /lol-match-history/v1/games/$gameId).teams[0].win
                             break
                         }
                         Write-Host "attenteFinDeGame"
@@ -439,4 +486,8 @@ catch
 {
     Remove-Job -Name jobState -Force
     Write-Warning $_.Exception.Message
+}
+finally 
+{
+    Remove-Job -Name jobState -Force
 }

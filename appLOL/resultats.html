@@ -1,0 +1,53 @@
+﻿    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>RÃ©sultats du tableau</title>
+        <script>
+        window.onload = function calculatePercentage() {
+            var totalGagnant = 0;
+            var totalCells = 0;
+            var totalGagnantTd = document.querySelectorAll('.winner');
+
+            for (var i = 0; i < totalGagnantTd.length; i++) {
+                totalCells++;
+                if (totalGagnantTd[i].innerText === '2') {
+                    totalGagnant++;
+                }
+            }   
+            var totalPercentage = ((totalGagnant / totalCells) * 100)+"%";
+            var poucentageCell = document.getElementById("poucentageCell");
+            poucentageCell.textContent = totalPercentage
+            //QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+            var test = document.querySelectorAll('.data');
+            test.forEach(element => {
+                element.style.backgroundColor = "purple";
+            })
+        }
+        </script>
+    </head>
+    <body>
+        <h1>RÃ©sultats sous forme de tableau</h1>
+        <table id="resultatsTable" border="2">
+            <tr>
+                <th>Team</th>
+                <th>Champion</th>
+                <th>Position</th>
+                <th>Queue</th>
+                <th>Gagnant</th>
+            </tr>
+            <p>Total des Ã¢ges : <span id="poucentageCell"></span></p>
+            <tr>
+        <td class="team">teamOne (You)</td>
+        <td class="champion data">55%</td>
+        <td class="position data">50%</td>
+        <td class="queue data">48%</td>
+        <td rowspan="2" class="winner">1</td>
+    </tr>
+    <tr>
+        <td class="team">teamTwo</td>
+        <td class = "champion data">54%</td>
+        <td class="position data">59%</td>
+        <td class="queue data">51%</td>
+    </tr>
+</table>
+

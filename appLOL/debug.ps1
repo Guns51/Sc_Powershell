@@ -49,7 +49,7 @@ $headers = @{"Authorization"= "Basic $tokenAuth"}
 #avoir resumé d'un seul champion pour game specifique et resumé saison entiere avec un champion : GET /lol-career-stats/v1/summoner-stats/{puuid}/{season}/{queue}/{position}
 #avoir etat du jeu (champ select,matchmaking etc (InProgress pour game en cours ou chargement)) : GET /lol-gameflow/v1/gameflow-phase
 
-$gameSession = Get-Content -Path .\vartest.txt | ConvertFrom-Json
+$gameSession = Get-Content -Path "C:\Users\gunsa\Desktop\Sc_Powershell\vartest.txt" | ConvertFrom-Json
 #type de game
 $typeGame = $gameSession.gamedata.queue.id
 Write-Host "type de game : $typeGame"
@@ -83,8 +83,9 @@ if($typeGame -cin "400","420","440") #{400 = 5v5 Draft Pick games; 420 = RANKED_
     $teamOne = $gameSession.gameData.teamOne
     $teamtwo = $gameSession.gameData.teamTwo
     $compteur = 0
-    $tableauStats = @{}
+    $tableauStats = New-Object System.Collections.Specialized.OrderedDictionary
     $currentUserTeam = 0
+    
     #id de la saison actuelle
     $currentSaisonId = (GET /lol-ranked/v1/splits-config).currentSeasonId
     function calculStats #return hashtable
@@ -230,9 +231,240 @@ if($typeGame -cin "400","420","440") #{400 = 5v5 Draft Pick games; 420 = RANKED_
         $tableauStats[$team] += @{
                         $position = $statsCombine
         } 
-        
-      }
-    }
+        }
+     }
 
 }
+function calculGlobalStats
+{
+    $tableauStats["resume"] = @{}
+    $tableauStats.keys -match "team" | %{
+        $teamGlobalStats = $_
+        "ChampionSummary","PositionSummary","QueueSummary" | % {
+            $facteurTotal = 0
+            $nbPlayedTotal = 0
+            $summaryTree = $_
+            "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | % {
+                $positionTree = $_
+                $winrate = $tableauStats."$($teamGlobalStats)".$($positionTree).$($summaryTree).winrate
+                #Write-Host $winrate 'winrate'
+                if($winrate -eq "NULL"){continue}
+                #retirer le "%"
+                [int]$intWinrate = ($winrate | Select-String -Pattern '\d+' -AllMatches).Matches.Value
+                [int]$nbPlayed = $tableauStats."$($teamGlobalStats)".$($positionTree).$($summaryTree).nbPlayed
+                #Write-Host $nbPlayed 'nbPlayed'
+                [int]$nbPlayedTotal += $nbPlayed
+                #Write-Host $nbPlayedTotal 'nbPlayedTotal'
+                [int]$facteurTotal += ($intWinrate*$nbPlayed)
+                #Write-Host $facteurTotal 'facteurTotal'
+            }
+            $resumePourcentage = [math]::Round($facteurTotal/$nbPlayedTotal)
+            $tableauStats["resume"][$teamGlobalStats] += @{"$_" = [string]$resumePourcentage + "%"}
+        }  
+    }
+}
+calculGlobalStats
+
+$display = {
+    param($tableauStats)
+    try {
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+    # Créer une fenêtre Windows Forms
+    $form = New-Object Windows.Forms.Form
+    $form.Text = "Exemple de TreeView"
+    $form.WindowState = [System.Windows.Forms.FormWindowState]::Maximized
+    # Créer un contrôle TreeView
+    $treeView = New-Object Windows.Forms.TreeView
+    $treeView.Dock = [System.Windows.Forms.DockStyle]::Fill
+    ############################
+    $treeView.ForeColor = [System.Drawing.Color]::DarkGray
+    $treeView.BackColor = [System.Drawing.Color]::Black
+    $treeView.Font = New-Object Drawing.Font("Bahnschrift Light", 11, [Drawing.FontStyle]::Regular)
+    $treeView.HideSelection = $true
+    $treeView.ShowLines = $true
+    $treeView.ShowRootLines = $false
+    $treeView.ShowRootLines = $true
+    $treeView.BorderStyle = [System.Windows.Forms.BorderStyle]::Fixed3D
+    $treeView.ItemHeight = 20
+    $treeView.FullRowSelect = $true
+    $treeView.Indent = 50
+    $treeView.LineColor = [System.Drawing.Color]::Cyan
+    $treeView.Add_AfterSelect({
+        $treeView.SelectedNode = $null
+    })
+    $treeView.Add_NodeMouseClick({
+        $node = $_.Node
+        if (-not $node.IsExpanded) {
+            $node.Expand()
+        }else{$node.Collapse()}
+    })
+
+    # Ajouter des nœuds au TreeView
+    $rootNodeResume = $treeView.Nodes.Add("Resume")
+    $rootNode = $treeView.Nodes.Add("Game")
+    $rootNode.BackColor = [System.Drawing.Color]::DarkBlue
+    $rootNode.ForeColor = [System.Drawing.Color]::LightCyan
+    $tableauStats.keys -match "team" | %{
+        $teamTree = $_
+        $childNode = $rootNode.Nodes.Add("$_") #teams
+        #$tabForStatsPostGame = @{}
+        ##############################---Arbre "GAME"---#########################################
+        "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | % {
+            $positionTree = $_
+            $childNode1 = $childNode.Nodes.Add("$_")
+            "ChampionSummary","PositionSummary","QueueSummary" | % {
+                $summaryTree = $_
+                $childNode2 = $childNode1.Nodes.Add("$_")
+                "winrate","nbPlayed","nbWIN" | % {
+                    $typeStatTree = $_
+                    $childNode3 = $childNode2.Nodes.Add("$_")
+                    $childNode4 = $childNode3.Nodes.Add($tableauStats."$($teamTree)".$($positionTree).$($summaryTree).$($typeStatTree))
+                    if($typeStatTree -eq "winrate"){
+                        $childNode3.Expand()
+                        [int]$pourcentage = ($childNode4 |Select-String -Pattern '\d+' -AllMatches).Matches.Value
+                        Write-Host $pourcentage
+                        $childNode4.NodeFont = New-Object Drawing.Font("Bahnschrift Light",13,[Drawing.FontStyle]::Bold)
+                        if($pourcentage -lt 50)
+                        {
+                            $childNode4.ForeColor = [System.Drawing.Color]::Red
+                        }
+                        else {
+                            if($pourcentage -gt 50)
+                            {
+                                $childNode4.ForeColor = [System.Drawing.Color]::Green
+                            }else{$childNode4.ForeColor = [System.Drawing.Color]::Yellow}
+                        }
+                    }
+                }
+            }
+        }
+        ##############################---Fin Arbre "GAME"---#########################################
+
+        ##############################---Arbre "Resume"---#########################################
+        
+        $rootNodeResume2 = $rootNodeResume.Nodes.Add("$_")#teams
+        "ChampionSummary","PositionSummary","QueueSummary" | % {
+            $rootNodeResume3 = $rootNodeResume2.Nodes.Add("$_") #"ChampionSummary","PositionSummary","QueueSummary"
+            $resumePourcentage = $tableauStats.resume.$teamTree.$_
+            $rootNodeResume4 = $rootNodeResume3.Nodes.Add([string]$resumePourcentage + "%")
+            $rootNodeResume4.NodeFont = New-Object Drawing.Font("Bahnschrift Light",13,[Drawing.FontStyle]::Bold)
+            if($resumePourcentage -lt 50 )
+            {
+                $rootNodeResume4.ForeColor = [System.Drawing.Color]::Red
+            }
+            else {
+                if($resumePourcentage -gt 50)
+                {
+                    $rootNodeResume4.ForeColor = [System.Drawing.Color]::Green
+                }else{$rootNodeResume4.ForeColor = [System.Drawing.Color]::Yellow}
+            }
+        }
+        
+        ##############################---Fin Arbre "Resume"---#########################################
+    }
+    $rootNodeResume.Expand() # Dérouler le nœud racine
+
+    # Ajouter le TreeView à la fenêtre
+    $form.Controls.Add($treeView)
+    $form.ShowDialog()
+    }
+    catch{return $_}
+}
+ 
+Start-Job -ScriptBlock $display -ArgumentList $tableauStats
+
+#################################---Pour Statistic post game---######(Actuellement dans foreach de TEAM)####################################
+$tableauStats.keys -match "team" | %{
+    $team = "$_"
+    $D = $tableauStats.resume.$team
+    $champion = ($D.ChampionSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
+    $position = ($D.PositionSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
+    $queue = ($D.QueueSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
+    $moyenne = ($champion+$position+$queue)/3
+    $gagnant = "1"
+
+    # Charger le contenu actuel du fichier HTML s'il existe, sinon créer le contenu initial
+    if (!(Test-Path "resultats.html"))  {
+        $html = @"
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Résultats du tableau</title>
+        <script>
+        window.onload = function calculatePercentage() {
+            var totalGagnant = 0;
+            var totalCells = 0;
+            var totalGagnantTd = document.querySelectorAll('.winner');
+
+            for (var i = 0; i < totalGagnantTd.length; i++) {
+                totalCells++;
+                if (totalGagnantTd[i].innerText === '2') {
+                    totalGagnant++;
+                }
+            }   
+            var totalPercentage = ((totalGagnant / totalCells) * 100)+"%";
+            var poucentageCell = document.getElementById("poucentageCell");
+            poucentageCell.textContent = totalPercentage
+            //QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+            var test = document.querySelectorAll('.data');
+            test.forEach(element => {
+                element.style.backgroundColor = "purple";
+            })
+        }
+        </script>
+    </head>
+    <body>
+        <h1>Résultats sous forme de tableau</h1>
+        <table id="resultatsTable" border="2">
+            <tr>
+                <th>Team</th>
+                <th>Champion</th>
+                <th>Position</th>
+                <th>Queue</th>
+                <th>Gagnant</th>
+            </tr>
+            <p>Total des âges : <span id="poucentageCell"></span></p>
+        </table>
+"@
+    $html | Set-Content -Path "resultats.html" -Encoding UTF8
+    } 
+    else {
+        $html = Get-Content -Path "resultats.html" -Raw
+    }
+
+    # Générer la nouvelle ligne du tableau en utilisant les données
+    if (($team.Substring(0,7)) -eq "teamOne") {
+    $nouvelleLigne = @"
+    <tr>
+        <td class="team">$team</td>
+        <td class="champion data">$($champion+"%")</td>
+        <td class="position data">$($position+"%")</td>
+        <td class="queue data">$($queue+"%")</td>
+        <td rowspan="2" class="winner">$gagnant</td>
+    </tr>
+"@
+    }
+    else
+    {
+    $nouvelleLigne = @"
+    <tr>
+        <td class="team">$team</td>
+        <td class = "champion data">$($champion+"%")</td>
+        <td class="position data">$($position+"%")</td>
+        <td class="queue data">$($queue+"%")</td>
+    </tr>
+"@
+    }
+    # Ajouter la nouvelle ligne à la fin du tableau
+    $html = $html -replace "</table>", "$nouvelleLigne`n</table>"
+
+    # Écrire le contenu HTML mis à jour dans le fichier
+    $html | Set-Content -Path "resultats.html" -Encoding UTF8
+
+    Write-Host "Une nouvelle ligne a été ajoutée au fichier 'resultats.html' avec succès."
+}
+#################################---Pour Statistic post game (FIN)---##########################################
+
+
 
