@@ -1,0 +1,92 @@
+﻿                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Resultat des estimations</title>
+                    <script>
+                    window.onload = function calculatePercentage() {
+                        var totalGagnant = 0;
+                        var totalCells = 0;
+                        var totalGame = 0;
+                        var rightPredict = 0;
+
+                        //pour couleur des .data
+                        var data = document.querySelectorAll('.data');
+                        data.forEach(element => {
+                            var content = element.innerHTML.match(/\d+/)[0];
+                            if(content > 50)
+                            {element.style.color = "green";}
+                            else{
+                                if (content < 50) {
+                                    element.style.color = "firebrick";
+                                } else {
+                                    element.style.color = "darkgoldenrod";
+                                }
+                            }
+                            })
+                        //pour couleur des lignes (en gris)
+                        var rows = document.querySelectorAll('#resultatsTable tbody tr');
+                        for (let i = 0; i < rows.length-1; i += 4) {
+                            rows[i].style.backgroundColor = "#212020";
+                            rows[i + 1].style.backgroundColor = "#212020";
+                        }
+                        //pour calculer le pourcentage de bonne predictions
+                        for(let i = 0; i < rows.length-1; i+=2)
+                        {
+                            totalGame += 1;
+                            let winnerTheoric = rows[i].getElementsByClassName("theoricWinner")[0].innerHTML;
+                            let winner = rows[i].getElementsByClassName("winner")[0].innerHTML;
+                            if (winnerTheoric === winner)
+                            {
+                                rightPredict += 1;
+                            }
+                        }
+                        var predict = ((rightPredict/totalGame)*100).toFixed(2) + "%";
+                        document.querySelector('.fixed-box_content').textContent = predict;
+                    }
+                    </script>
+                    <style>
+                    body{background-color: rgb(27, 26, 26);
+                        font-family:"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+                        font-weight: bold;}
+                    h1{color: lightskyblue;text-align: center;}
+                    p{color: darkorchid;}
+                    .data {color:lightskyblue;font-weight: bold;text-align: center;}
+                    thead{color: white;text-transform: uppercase;display: table-header-group;letter-spacing: 0.3rem;}
+                    .team {color:cadetblue;text-align: center;}
+                    th,td,tr {padding: 0.3rem;}
+                    tr {display: table-row;}
+                    table {display: table;border-collapse: collapse;margin-left: 3%;width: 70%;}
+                    td {display: table-cell;}
+                    .theoricWinner,.winner {text-align: center;color: aqua;}
+                    .moyenne {color: salmon;text-align: center;}
+                    .fixed-box {top: 35%;position: fixed;right: 10%;color: rgb(6, 168, 93);border: 2px solid goldenrod;text-align: center;padding: 0.5rem;}
+                    .fixed-box_content {color: aquamarine;}
+                    </style>
+                </head>
+                <body>
+                    <h1>Resultat des estimations</h1>
+                    <table id="resultatsTable">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Champion</th>
+                                <th>Position</th>
+                                <th>Queue</th>
+                                <th>Moyenne</th>
+                                <th>Gagnant<br>Theorique</th>
+                                <th>Gagnant<br>Reel</th>
+                            </tr>
+                        </thead>
+                                    <tr>
+                    <td class="team">teamTwo</td>
+                    <td class = "champion data">54%</td>
+                    <td class="position data">59%</td>
+                    <td class="queue data">52%</td>
+                    <td class="moyenne">55%</td>
+                </tr>
+</table>
+                    <div class="fixed-box">
+                        ResultPredict
+                        <div class="fixed-box_content"></div>
+                    </div>
+
