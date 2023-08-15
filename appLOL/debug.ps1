@@ -82,10 +82,13 @@ if($typeGame -cin "400","420","440") #{400 = 5v5 Draft Pick games; 420 = RANKED_
     ########################---Bloc prinpale pour calcul stat---##################################################
     $teamOne = $gameSession.gameData.teamOne
     $teamtwo = $gameSession.gameData.teamTwo
+    $gameId = $gameSession.gameData.gameId
     $compteur = 0
     $tableauStats = New-Object System.Collections.Specialized.OrderedDictionary
     $currentUserTeam = 0
-    
+    $tabMoyenne = @()
+    $Script:moyenneTeamOne = @()
+    $Script:moyenneTeamTwo = @()
     #id de la saison actuelle
     $currentSaisonId = (GET /lol-ranked/v1/splits-config).currentSeasonId
     function calculStats #return hashtable
@@ -235,7 +238,7 @@ if($typeGame -cin "400","420","440") #{400 = 5v5 Draft Pick games; 420 = RANKED_
      }
 
 }
-function calculGlobalStats
+function calculGlobalStatsAndMoyenne
 {
     $tableauStats["resume"] = @{}
     $tableauStats.keys -match "team" | %{
@@ -260,10 +263,37 @@ function calculGlobalStats
             }
             $resumePourcentage = [math]::Round($facteurTotal/$nbPlayedTotal)
             $tableauStats["resume"][$teamGlobalStats] += @{"$_" = [string]$resumePourcentage + "%"}
-        }  
+        }
+    ####calcul moyenne des summary pour chaque team####
+        $team = "$_"
+        $D = $tableauStats.resume.$team
+        [int]$champion = ($D.ChampionSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
+        [int]$position = ($D.PositionSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
+        [int]$queue = ($D.QueueSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
+        #index 0 = teamOne ||| index 1 = teamTwo
+        $tabMoyenne += ([math]::Round(($champion+$position+$queue)/3))
+
     }
+    #apres avoir fait la moyenne : savoir quelle est la plus grande ou egale
+    if($tabMoyenne[0] -gt $tabMoyenne[1])#si teamOne plus grand que teamTwo
+    {
+        $theoricWinner = 1
+    }
+    else {
+        if ($tabMoyenne[0] -lt $tabMoyenne[1])#si teamTwo plus grand que teamOne
+        {
+            $theoricWinner = 2
+        }
+        else #si egalité
+        {
+            $theoricWinner = "="
+        }
+    }
+    $Script:moyenneTeamOne += $tabMoyenne[0]
+    $Script:moyenneTeamTwo += $tabMoyenne[1]
+    return $theoricWinner
 }
-calculGlobalStats
+$theoricWinner = calculGlobalStatsAndMoyenne
 
 $display = {
     param($tableauStats)
@@ -371,66 +401,120 @@ $display = {
     }
     catch{return $_}
 }
- 
+
 Start-Job -ScriptBlock $display -ArgumentList $tableauStats
 
 #################################---Pour Statistic post game---######(Actuellement dans foreach de TEAM)####################################
+#si la team 100 (teamOne) a gagnée :
+if(((GET /lol-match-history/v1/games/$gameId).teams[0].win) -eq "Win")
+{
+    $winner = 1                    ###gagnant le la partie###
+}
+else{$winner = 2}
+
 $tableauStats.keys -match "team" | %{
     $team = "$_"
     $D = $tableauStats.resume.$team
     $champion = ($D.ChampionSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
     $position = ($D.PositionSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
     $queue = ($D.QueueSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
-    $moyenne = ($champion+$position+$queue)/3
-    $gagnant = "1"
-
     # Charger le contenu actuel du fichier HTML s'il existe, sinon créer le contenu initial
-    if (!(Test-Path "resultats.html"))  {
+    if(!(Test-Path "$env:USERPROFILE\documents\lolStat\"))
+    {
+        New-Item -ItemType Directory -Path "$env:USERPROFILE\documents\lolStat\" -Force
+    }
+    $pathResult = "$env:USERPROFILE\documents\lolStat\resultats.html"
+    if (!(Test-Path $pathResult))  {
         $html = @"
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Résultats du tableau</title>
+        <title>Resultat des estimations</title>
         <script>
         window.onload = function calculatePercentage() {
             var totalGagnant = 0;
             var totalCells = 0;
-            var totalGagnantTd = document.querySelectorAll('.winner');
+            var totalGame = 0;
+            var rightPredict = 0;
 
-            for (var i = 0; i < totalGagnantTd.length; i++) {
-                totalCells++;
-                if (totalGagnantTd[i].innerText === '2') {
-                    totalGagnant++;
+            //pour couleur des .data
+            var data = document.querySelectorAll('.data');
+            data.forEach(element => {
+                var content = element.innerHTML.match(/\d+/)[0];
+                if(content > 50)
+                {element.style.color = "green";}
+                else{
+                    if (content < 50) {
+                        element.style.color = "firebrick";
+                    } else {
+                        element.style.color = "darkgoldenrod";
+                    }
                 }
-            }   
-            var totalPercentage = ((totalGagnant / totalCells) * 100)+"%";
-            var poucentageCell = document.getElementById("poucentageCell");
-            poucentageCell.textContent = totalPercentage
-            //QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
-            var test = document.querySelectorAll('.data');
-            test.forEach(element => {
-                element.style.backgroundColor = "purple";
-            })
+                })
+            //pour couleur des lignes (en gris)
+            var rows = document.querySelectorAll('#resultatsTable tbody tr');
+            for (let i = 0; i < rows.length-1; i += 4) {
+                rows[i].style.backgroundColor = "#212020";
+                rows[i + 1].style.backgroundColor = "#212020";
+            }
+            //pour calculer le pourcentage de bonne predictions
+            for(let i = 0; i < rows.length-1; i+=2)
+            {
+                totalGame += 1;
+                let winnerTheoric = rows[i].getElementsByClassName("theoricWinner")[0].innerHTML;
+                let winner = rows[i].getElementsByClassName("winner")[0].innerHTML;
+                if (winnerTheoric === winner)
+                {
+                    rightPredict += 1;
+                }
+            }
+            var predict = ((rightPredict/totalGame)*100).toFixed(2) + "%";
+            document.querySelector('.fixed-box_content').textContent = predict;
         }
         </script>
+        <style>
+        body{background-color: rgb(27, 26, 26);
+            font-family:"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-weight: bold;}
+        h1{color: lightskyblue;text-align: center;}
+        p{color: darkorchid;}
+        .data {color:lightskyblue;font-weight: bold;text-align: center;}
+        thead{color: white;text-transform: uppercase;display: table-header-group;letter-spacing: 0.3rem;}
+        .team {color:cadetblue;text-align: center;}
+        th,td,tr {padding: 0.3rem;}
+        tr {display: table-row;}
+        table {display: table;border-collapse: collapse;margin-left: 3%;width: 70%;}
+        td {display: table-cell;}
+        .theoricWinner,.winner {text-align: center;color: aqua;}
+        .moyenne {color: salmon;text-align: center;}
+        .fixed-box {top: 35%;position: fixed;right: 10%;color: rgb(6, 168, 93);border: 2px solid goldenrod;text-align: center;padding: 0.5rem;}
+        .fixed-box_content {color: aquamarine;}
+        </style>
     </head>
     <body>
-        <h1>Résultats sous forme de tableau</h1>
-        <table id="resultatsTable" border="2">
-            <tr>
-                <th>Team</th>
-                <th>Champion</th>
-                <th>Position</th>
-                <th>Queue</th>
-                <th>Gagnant</th>
-            </tr>
-            <p>Total des âges : <span id="poucentageCell"></span></p>
+        <h1>Resultat des estimations</h1>
+        <table id="resultatsTable">
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>Champion</th>
+                    <th>Position</th>
+                    <th>Queue</th>
+                    <th>Moyenne</th>
+                    <th>Gagnant<br>Theorique</th>
+                    <th>Gagnant<br>Reel</th>
+                </tr>
+            </thead>
         </table>
+        <div class="fixed-box">
+            ResultPredict
+            <div class="fixed-box_content"></div>
+        </div>
 "@
-    $html | Set-Content -Path "resultats.html" -Encoding UTF8
+    $html | Set-Content -Path $pathResult -Encoding UTF8 -Force
     } 
     else {
-        $html = Get-Content -Path "resultats.html" -Raw
+        $html = Get-Content -Path $pathResult -Raw -Encoding UTF8 -Force
     }
 
     # Générer la nouvelle ligne du tableau en utilisant les données
@@ -441,7 +525,9 @@ $tableauStats.keys -match "team" | %{
         <td class="champion data">$($champion+"%")</td>
         <td class="position data">$($position+"%")</td>
         <td class="queue data">$($queue+"%")</td>
-        <td rowspan="2" class="winner">$gagnant</td>
+        <td class="moyenne">$($Script:moyenneTeamOne)%</td>
+        <td rowspan="2" class="theoricWinner">$theoricWinner</td>
+        <td rowspan="2" class="winner">$winner</td>
     </tr>
 "@
     }
@@ -453,6 +539,7 @@ $tableauStats.keys -match "team" | %{
         <td class = "champion data">$($champion+"%")</td>
         <td class="position data">$($position+"%")</td>
         <td class="queue data">$($queue+"%")</td>
+        <td class="moyenne">$($Script:moyenneTeamTwo)%</td>
     </tr>
 "@
     }
@@ -460,7 +547,7 @@ $tableauStats.keys -match "team" | %{
     $html = $html -replace "</table>", "$nouvelleLigne`n</table>"
 
     # Écrire le contenu HTML mis à jour dans le fichier
-    $html | Set-Content -Path "resultats.html" -Encoding UTF8
+    $html | Set-Content -Path $pathResult -Encoding UTF8 -Force
 
     Write-Host "Une nouvelle ligne a été ajoutée au fichier 'resultats.html' avec succès."
 }
