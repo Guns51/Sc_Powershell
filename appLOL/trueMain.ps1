@@ -1,3 +1,13 @@
+#############################################################################################################
+###                                                                                                       ###
+##################################---Script pour league of legend---#########################################
+###                                                                                                       ###
+#Fonctionne avec powershel 5.1                                                                            ###
+# Fonction 1 : accept le matchmaking automatiquement                                                      ###
+# Fonction 2 : Interface graphique quand une game est lancée qui fait un recap des winrates en detail     ###
+# Fonction 3 : Créer une page web apres la game avec le resultat (dans Document/lolStat)                  ###
+#############################################################################################################
+
 if(!(Get-Process -Name LeagueClientUx -ErrorAction SilentlyContinue))
 {
     Write-Warning $Error[0].Exception.Message
@@ -6,8 +16,7 @@ if(!(Get-Process -Name LeagueClientUx -ErrorAction SilentlyContinue))
 
 #creation dossier de log
 try {
-    New-Item -ItemType Directory -Name "AppStatLol" -Path "$env:ProgramData" -ErrorAction SilentlyContinue
-    New-Item -ItemType File -Name "resultStat.csv" -Path "$env:ProgramData\AppStatLol" -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Name "lolStat" -Path "$env:ProgramData" -ErrorAction SilentlyContinue
 }
 catch {
     Write-Error $_.Exception.Message
@@ -78,8 +87,14 @@ $scGameFlow = {
     
     while($true)
     {
-        GET /lol-gameflow/v1/gameflow-phase
-        sleep 2
+        try {#comportement normal (si jeu ouvert)
+            GET /lol-gameflow/v1/gameflow-phase
+            sleep 2
+        }
+        catch {#si jeu fermé return gameStop pour arreter le script
+            "gameStop"
+            sleep 2
+        }
     }
 }
 #Lance le job pour la gameFlow
@@ -195,9 +210,10 @@ function calculStats #return hashtable avec nbWIN et nbPlayed
 ##########################################################################---Debut switch principal ---#######################################################################################################
 ######                                                                                                                                                                                                  ######
 ##############################################################################################################################################################################################################
+
 while ($true)
 {
-    switch ((Receive-Job jobState -ErrorAction Stop)| select -Last 1) 
+    switch ((Receive-Job jobState -ErrorAction SilentlyContinue)| select -Last 1) 
     {
         #si fait rien
         "None" {$_;Start-Sleep -Seconds 3;break}
@@ -516,7 +532,7 @@ while ($true)
             ###---Une fois la recuperation des stats effectuées : attendre la fin de la game---###
 
 
-            while(((Receive-Job jobState)| select -Last 1) -cin "InProgress")#Tant que le gameFlow est toujours en "InProgress" : attendre
+            while(((Receive-Job jobState)| select -Last 1) -cin "InProgress","gameStop")#Tant que le gameFlow est toujours en "InProgress"ou que le jeu est fermé : attendre
             {
                     Start-Sleep -Seconds 10
                     Write-Host "attenteFinDeGamePourStatDansHtml"
@@ -688,6 +704,10 @@ while ($true)
         "WaitingForStats" {$_;Start-Sleep -Seconds 3;break}
         #si dans stat de fin de game
         "EndOfGame" {break}
+        #si jeu fermé
+        "gameStop" {Remove-Job -Name jobState -Force;return "fin"}
         Default {$_;Start-Sleep -Seconds 10;break}
     }
-}
+
+    Start-Sleep -Seconds 1
+}    
