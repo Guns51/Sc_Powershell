@@ -6,8 +6,7 @@ while ($true) {
     Start-Sleep -Seconds 3
     $players = Invoke-RestMethod -Uri "https://panel.omgserv.com/json/398902/players"
     switch -Exact -CaseSensitive ($players.players) {
-        "morgxnnne" {$synthesizer.Speak("Morganne c'est connecter");$i = 1;break}
-        "RdegatsBruts" {$synthesizer.Speak("Marius c'est connecter");$i = 1;break}
+        "pseudo" {$synthesizer.Speak("pseudo c'est connecter");$i = 1;break}
     }
 }
 
