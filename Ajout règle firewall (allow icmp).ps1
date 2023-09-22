@@ -1,1 +1,0 @@
-New-NetFirewallRule -DisplayName ping2 -Action allow -Direction inbound -Enabled true -Protocol 1
