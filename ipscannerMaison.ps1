@@ -1,5 +1,5 @@
 #Necessite pswh 7 >>>
-if(!(Test-Path -Path "C:\Program Files\PowerShell\7\pwsh.exe"))
+if(!(Test-Path -Path "C:\progra~1\powershell\7\pwsh.exe"))
 {
     winget install --id Microsoft.Powershell --source winget
     Start-Job -Name "installPwsh7" -ScriptBlock { winget install --id Microsoft.Powershell --source winget } -InformationAction SilentlyContinue

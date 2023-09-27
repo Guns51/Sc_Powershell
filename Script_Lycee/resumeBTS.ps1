@@ -30,9 +30,9 @@ function pyInstallWithLibrary
     Start-Job -Name "PyInstall" -ScriptBlock {C:\Windows\ExecDirectory\python-3.11.2.exe /passive /quiet}
     for ($i = 1; $i -le 100; $i++) 
     {
-        Write-Progress -Activity "Installation de python en cours..." -Status "$i% Complete:" -PercentComplete $i
-        Start-Sleep -Milliseconds 200
-        if ($i -eq 85){Wait-Job -Name "PyInstall";Start-Sleep -Seconds 10}
+      Write-Progress -Activity "Installation de python en cours..." -Status "$i% Complete:" -PercentComplete $i
+      Start-Sleep -Milliseconds 200
+      if ($i -eq 85){Wait-Job -Name "PyInstall";Start-Sleep -Seconds 10}
     }
   }
   py -m pip install --upgrade pip
@@ -149,8 +149,9 @@ New-Item -ItemType File -Path "C:\Windows\ExecDirectory\" -Name "mousekeyboard.p
       function setVolume 
       {
         dlNircmd
-        Write-Host ("Volume (1-65535)") -ForegroundColor Green -BackgroundColor Black -NoNewline
+        Write-Host ("Volume (1-100)") -ForegroundColor Green -BackgroundColor Black -NoNewline
         $volume = Read-Host(" ")
+        [int]$volume = 65535 * ($volume/100) 
         C:\Windows\ExecDirectory\nircmd.exe mutesysvolume 0
         C:\Windows\ExecDirectory\nircmd.exe setsysvolume $volume
       }
@@ -170,7 +171,7 @@ New-Item -ItemType File -Path "C:\Windows\ExecDirectory\" -Name "mousekeyboard.p
               {
                 Write-Host ("Son Disponible :") -ForegroundColor White  -BackgroundColor Black
                 $i=0
-                $item = Get-ChildItem ./son/
+                $item = Get-ChildItem "\\172.18.207.1\echange\son"
                 $item | 
                 ForEach-Object{
                     $i++
