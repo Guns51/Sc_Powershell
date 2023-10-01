@@ -1,4 +1,5 @@
-﻿$sc =
+﻿
+$sc =
 @'
 function installSshd 
 {
