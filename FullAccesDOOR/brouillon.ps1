@@ -1,0 +1,1 @@
+Import-Module $PSScriptRoot\install_Pwsh.psm1
