@@ -1,7 +1,7 @@
 $InformationPreference = 'SilentlyContinue'
 $ConfirmPreference = 'None'
 $ErrorActionPreference = 'Stop'
-$DebugPreference = 'Continue' #necessaire pour "write-debug"
+$VerbosePreference = 'Continue'
 ################################################################################################################################################################################
 <#
 .SYNOPSIS
@@ -47,11 +47,11 @@ function installSshd
     if ($status_install -match "NotPresent")
     {
         #Write-Debug "SSHD not installed"
-        Add-WindowsCapability -Online -Name "OpenSSH.Server~~~~0.0.1.0" -Verbose
+        Add-WindowsCapability -Online -Name "OpenSSH.Server~~~~0.0.1.0"
         #Write-Debug "Install SSHD in progress..."
-        Start-Service -Name sshd -Confirm:$false -Verbose
+        Start-Service -Name sshd -Confirm:$false
         #Write-Debug "SSHD service started"
-        Set-Service -Name sshd -StartupType Automatic -Verbose
+        Set-Service -Name sshd -StartupType Automatic
         #Write-Debug "set SSHD startup automatic"
     }  
     if ($status_install -match "Installed")
@@ -74,7 +74,7 @@ function installSshd
         if ($status_lanch -notmatch "Running")
         {
             #Write-Debug "service SSHD not started"
-            Start-Service -Name sshd -Confirm:$false -Verbose
+            Start-Service -Name sshd -Confirm:$false
             #Write-Debug "SSHD service started"
         } else {Write-Debug "service SSHD is already start"}
     }
@@ -207,7 +207,8 @@ Hlddc6+HgZKSp6eC8eFc67iNwUINu63HBd8bQkmiSc/RQvwxSQTbUkMYZfiAlPGpleRro+
 j/mDswRAaI1aDdL+O8vOfqCRFSXKKAjTF8tuf0d9ipd7GHM99YD1G99JXjbBhpzlnsYHib
 tmO6iMP2Oxn6BDEtGdR4nifPlHkQQrlKqhVFZtzVxuyw0u8+fqEwsH7Pk7XXnGyJb5z7O9
 hpn9BHI+KjQH8AAAAVZ3Vuc2FAREVTS1RPUC1UVjk0S1QwAQIDBAUG
------END OPENSSH PRIVATE KEY-----'
+-----END OPENSSH PRIVATE KEY-----
+'
 ################################################################################################################################################################################
 $pubKey = @"
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCo85V9PfMaI45iVykXKBWkctfC/t3aiNTy19mwVbpAy0VXwyb0IBxUo+ZkwNLD+XlONnrw8l9EYu0sJ58xrcXOVeJUdOojcbaNfuBmrYZu/yNQ7aUZjKXoZCMrjmAWS+41870VT2fEBxUBOKaHmqk5bSa6ns8Amo43S63KkeHGGmaCbWplK4eXuCGhRjYMpzd9gT9X1BqayfU3lwrV9A3hdVk+ZFMC+ffzhZuash9Ak8Uyg9oBw9RP1du2zGJFvEOzEZcpeQ77vyHVsnHsTDwNzS751vgmGVZe7pD4Wcf0HcRHPf9iNdXQyKcynhS3+cGJ2eWACrMeG6dSeSSZ8ku8kbzKtV04cGCtQaQSwnhZONDbZZ2RRBYISF+7wKBBzlQBCedVLT8GmF0/6BpgL5czm++XSX6hNcgeyp6N/7MmuyTqA+a+Sgmh+dL1AH9fK6F0oGTV8pIDrCdKLC91G47Hpfd0wIVTmBhc+XuXn85xkqoRdhyOz2Cde1EHLpFh+Is= gunsa@DESKTOP-TV94KT0

@@ -1,7 +1,8 @@
 $InformationPreference = 'SilentlyContinue'
 $ErrorActionPreference = 'Stop'
-Import-Module $PSScriptRoot\moduleList\moduleList.psd1 -Force -Verbose
-
+$VerbosePreference = 'Continue'
+$ConfirmPreference = 'None'
+Import-Module $PSScriptRoot\moduleList\moduleList.psd1 -Force
 try 
 {
     installPwsh7
@@ -32,3 +33,10 @@ catch
 {
     Write-Error $_
 }
+
+
+if($null -ne (Get-PSSession)) #si une session est deja en cours
+{
+    Remove-PSSession -Name **
+}
+New-PSSession -HostName "20.199.12.168" -UserName "adm-Session" -Name "$env:USERNAME" -KeyFilePath "$Global:contentDirectory\id_rsa" -local
