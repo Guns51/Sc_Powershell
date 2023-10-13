@@ -20,8 +20,8 @@ switch($choix)
             Write-Host "New mask (CDIR) :" -NoNewline
             $inputCdirMask = Read-Host
             Write-Host "New gateway :" -NoNewline
-            $inputCdirMask = Read-Host
-            $netAdapter |  New-NetIPAddress -IPAddress $inputIpAddress -PrefixLength $inputCdirMask -DefaultGateway $inputCdirMask -Confirm:$false -ErrorAction SilentlyContinue
+            $inputGateway = Read-Host
+            $netAdapter |  New-NetIPAddress -IPAddress $inputIpAddress -PrefixLength $inputCdirMask -DefaultGateway $inputGateway -Confirm:$false -ErrorAction SilentlyContinue
         }
         Write-Host "New dns primary :" -NoNewline
         $inputDnsPrimary = Read-Host
@@ -66,21 +66,53 @@ switch($choix)
 
         Add-WindowsFeature -Name "AD-Domain-Services"
         cls
-        Write-Host "Domain Name :" -NoNewline
-        $domainName = Read-Host
-        Import-Module ADDSDeployment
-        Install-ADDSForest `
-        -CreateDnsDelegation:$false `
-        -DatabasePath "N:\NTDS" `
-        -DomainMode "WinThreshold" `
-        -DomainName "$domainName" `
-        -DomainNetbiosName "$($domainName.Substring(0,$domainName.LastIndexOf(".")))" `
-        -ForestMode "WinThreshold" `
-        -InstallDns:$true `
-        -LogPath "N:\NTDS" `
-        -NoRebootOnCompletion:$false `
-        -SysvolPath "S:\SYSVOL" `
-        -Force:$true
-
+        Write-Host "`r`n[1] " -NoNewline -ForegroundColor Green
+        Write-Host "AD avec création de domaine"
+        Write-Host "[2] " -NoNewline -ForegroundColor Green
+        Write-Host "AD pour joindre domaine existant"
+        Write-Host("`r`n`nNombre pour action [ ]") -ForegroundColor White -NoNewline
+        $choix= Read-Host(" ")
+        switch($choix)
+        {
+            1 {
+                Write-Host "New Domain Name :" -NoNewline
+                $domainName = Read-Host
+                Import-Module ADDSDeployment
+                Install-ADDSForest `
+                -CreateDnsDelegation:$false `
+                -DatabasePath "N:\NTDS" `
+                -DomainMode "WinThreshold" `
+                -DomainName "$domainName" `
+                -DomainNetbiosName "$($domainName.Substring(0,$domainName.LastIndexOf(".")))" `
+                -ForestMode "WinThreshold" `
+                -InstallDns:$true `
+                -LogPath "N:\NTDS" `
+                -NoRebootOnCompletion:$false `
+                -SysvolPath "S:\SYSVOL" `
+                -Force:$true
+            }
+            
+            2 {
+                Write-Host "Domain Name to join :" -NoNewline
+                $domainName = Read-Host
+                Write-Host "Name AD Source :" -NoNewline
+                $sourceAdName = Read-Host
+                Import-Module ADDSDeployment
+                Install-ADDSDomainController `
+                -NoGlobalCatalog:$false `
+                -CreateDnsDelegation:$false `
+                -Credential (Get-Credential -Message "Cred restauration mode") `
+                -CriticalReplicationOnly:$false `
+                -DatabasePath "N:\NTDS" `
+                -DomainName "$domainName" `
+                -InstallDns:$true `
+                -LogPath "N:\NTDS" `
+                -NoRebootOnCompletion:$false `
+                -ReplicationSourceDC "$sourceAdName.$domainName" `
+                -SiteName "Default-First-Site-Name" `
+                -SysvolPath "S:\SYSVOL" `
+                -Force:$true
+            }
+        }
     }
 }
