@@ -34,7 +34,7 @@ switch($choix)
         ipconfig
         Pause
         cls
-        Write-Host "New server name :" -NoNewline
+        Write-Host "New server name (default:none) :" -NoNewline
         $inputServerName = Read-Host
         switch ($inputServerName) 
         {
