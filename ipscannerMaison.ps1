@@ -9,9 +9,24 @@ if(!(Test-Path -Path "C:\progra~1\powershell\7\pwsh.exe"))
 
 pwsh -Command {
 #maskCDIR,ipAddress,byteHote
-$maskCDIR = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.PrefixLength
+$netProfil = (Get-NetIPConfiguration | ? "NetProfile")
+if($netProfil.Count -gt 1) #si il y a plus d'une interface de up
+{
+    cls
+    $i = 0
+    $netProfil | %{
+        $i++
+        Write-Host ("[$i] ") -NoNewline -ForegroundColor Magenta
+        Write-Host $_.InterfaceAlias -ForegroundColor Green
+    }
+    Write-Host("Nombre pour network_Card [ ]") -ForegroundColor Cyan -BackgroundColor Red -NoNewline
+    $choixCard = Read-Host(" ")
+    $netProfil = $netProfil[$choixCard-1]
+    cls
+}
+$maskCDIR = $netProfil.IPv4Address.PrefixLength
 #$maskCDIR = 20 #pour test
-$ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
+[string]$ipAddress = $netProfil.IPv4Address.IPAddress
 #$ipAddress = "172.18.203.15" #pour test
 $byteHote = 32-$maskCDIR
 
@@ -81,6 +96,9 @@ Function calculIpToPing
     1..(calculNombreHotes) | ForEach-Object{
         $ip = $ipDecimal+$_
         $ip = [Convert]::ToString($ip, 2)
+        while ($ip.Length -ne 32) {
+            [string]$ip=("0"+$ip)
+        }
         $Octet1 = [Convert]::ToInt64($ip.Substring(0, 8), 2)
         $Octet2 = [Convert]::ToInt64($ip.Substring(8, 8), 2)
         $Octet3 = [Convert]::ToInt64($ip.Substring(16, 8), 2)
@@ -90,9 +108,10 @@ Function calculIpToPing
     }
 }
 
-$ips = calculIpToPing
-$ips | % -Parallel {
 
+$ips = calculIpToPing
+
+$ips | % -Parallel {
     if (Test-Connection -TargetName $_ -Count 1 -Quiet)
     {	
         #####################################Get-DnsName##############################################
@@ -102,8 +121,7 @@ $ips | % -Parallel {
             $dnsName = "<notDnsName>"
         }
         #####################################Get-AddressMac##############################################
-        $ipAddress = (Get-NetIPConfiguration | ? "NetProfile").IPv4Address.IPAddress
-        if ($_ -ne $ipAddress)
+        if ($_ -ne $using:ipAddress)
         {
             $addressMac = (Get-NetNeighbor -IPAddress $_ -InformationAction SilentlyContinue).LinkLayerAddress
             if ($addressMac -eq "00-00-00-00-00-00")
@@ -112,7 +130,7 @@ $ips | % -Parallel {
             }
         }else 
         {
-            $addressMac =  (Get-NetIPConfiguration | ? "NetProfile").NetAdapter.MacAddress
+            $addressMac =  ((Get-NetIPConfiguration | ? "NetProfile").NetAdapter.MacAddress)[$using:choixCard-1]
         }
         ######################################Get-CoSSH##################################################
 	    $resultTestSSH = Test-NetConnection -ComputerName $_ -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue
