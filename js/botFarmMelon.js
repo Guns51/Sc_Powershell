@@ -2,9 +2,9 @@ const mineflayer = require('mineflayer');
 const { Vec3 } = require('vec3');
 
 const bot = mineflayer.createBot({
-  host: 'mc.minebox.fr',
+  host: 'ipServeur',
   //port: 25565,
-  username: 'gunsalexandre@gmail.com',
+  username: 'email',
   version: 1.18,
   auth: 'microsoft',
 });
@@ -183,8 +183,8 @@ const spaceEnterLine = 5
 const components = ['x', 'y', 'z'];
 
 /////////////////////////(--- VERTICAL ---)//////////////////////////////////////////
-const vecBeginFistLine = new Vec3 (-6430, 52, -116806);
-const vecEndtFistLine = new Vec3 (-6369, 52, -116806);
+const vecBeginFistLine = new Vec3 (-6430, 52, -116806);     // A MODIF //###########################################
+const vecEndtFistLine = new Vec3 (-6369, 52, -116806);      // A MODIF //###########################################
 
 for (const component of components) {
   if (vecBeginFistLine[component] === vecEndtFistLine[component]) {
@@ -199,8 +199,8 @@ var valueVerticalChangeEnd = ~~(vecEndtFistLine[letterChangeVertical])
 
 /////////////////////////(--- HORIZONTAL ---)////////////////////////////////////////
 
-const vecBeginLastLine = new Vec3 (-6430, 52, -116827);
-const vecEndLastLine = new Vec3 (-6369, 52, -116827);
+const vecBeginLastLine = new Vec3 (-6430, 52, -116827);    // A MODIF //###########################################
+const vecEndLastLine = new Vec3 (-6369, 52, -116827);      // A MODIF //###########################################
 
 for (const component of components) {
     if (vecBeginFistLine[component] === vecBeginLastLine[component]) {
@@ -231,17 +231,6 @@ bot.once("spawn",async () => {
   loop();
 })
 
-bot.on("chat",async(username,message) =>{
-  if(message == "go")
-  {
-    bot.setControlState("jump",true);
-    bot.setControlState("jump",false);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    bot.setControlState('forward',true);
-    
-  }
-  
-})
 
 
 
