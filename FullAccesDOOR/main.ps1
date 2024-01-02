@@ -25,9 +25,10 @@ $Global:contentDirectory = "$env:LOCALAPPDATA/content"
 
 try 
 {
-    createPrivateKeyOnRemote
+    createKey1OnRemote
     createAuthorized_key
     configSSHD_config
+    createKey2OnRemote
 }
 catch 
 {
@@ -35,8 +36,3 @@ catch
 }
 
 
-if($null -ne (Get-PSSession)) #si une session est deja en cours
-{
-    Remove-PSSession -Name **
-}
-New-PSSession -HostName "20.199.12.168" -UserName "adm-Session" -Name "$env:USERNAME" -KeyFilePath "$Global:contentDirectory\id_rsa" -local

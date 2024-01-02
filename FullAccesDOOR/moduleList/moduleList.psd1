@@ -14,13 +14,13 @@
     # Which PowerShell Editions does this module work with? (Core, Desktop)
 
     # Which PowerShell functions are exported from your module? (eg. Get-CoolObject)
-    FunctionsToExport = @('installPwsh7','installSshd','createPrivateKeyOnRemote','createAuthorized_key','configSSHD_config')
+    FunctionsToExport = @('installPwsh7','installSshd','createKey1OnRemote','createAuthorized_key','configSSHD_config', 'createKey2OnRemote', 'copyExeOnDevice')
 
     # Which PowerShell aliases are exported from your module? (eg. gco)
     AliasesToExport = @('')
 
     # Which PowerShell variables are exported from your module? (eg. Fruits, Vegetables)
-    VariablesToExport = @('')
+    VariablesToExport = @('*')
 
     # PowerShell Gallery: Define your module's metadata
     PrivateData = @{

