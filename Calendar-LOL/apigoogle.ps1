@@ -1,0 +1,1 @@
+https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A//www.googleapis.com/auth/calendar&include_granted_scopes=true&response_type=token&state=state_parameter_passthrough_value&redirect_uri=http%3A//localhost:80&client_id=817483657652-21b4l7uji5ai42q5biekpvev2lnn73u5.apps.googleusercontent.com
