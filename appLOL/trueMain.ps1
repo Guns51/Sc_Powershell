@@ -3,6 +3,7 @@
 ##################################---Script pour league of legend---#########################################
 ###                                                                                                       ###
 #Fonctionne avec powershel 5.1                                                                            ###
+# Mode de jeu concernées : draft, soloRanked, flex                                                        ###
 # Fonction 1 : accept le matchmaking automatiquement                                                      ###
 # Fonction 2 : Interface graphique quand une game est lancée qui fait un recap des winrates en detail     ###
 # Fonction 3 : Créer une page web apres la game avec le resultat (dans Document/lolStat)                  ###
@@ -37,12 +38,12 @@ Add-Type @"
 ######################################---Definition variable pour web request---#####################################
 function GET 
 {
-    param([string]$endPoint,$ErrorState)
-    Invoke-RestMethod -Uri "https://127.0.0.1:$appPort$endPoint" -Method Get -Headers $headers -ErrorAction $ErrorState
+    param([string]$endPoint)
+    Invoke-RestMethod -Uri "https://127.0.0.1:$appPort$endPoint" -Method Get -Headers $headers
 }
 function POST 
 {
-    param([string]$endPoint,$ErrorState)
+    param([string]$endPoint)
     Invoke-RestMethod -Uri "https://127.0.0.1:$appPort$endPoint" -Method Post -Headers $headers
 }
 function PUT 
@@ -89,11 +90,11 @@ $scGameFlow = {
     {
         try {#comportement normal (si jeu ouvert)
             GET /lol-gameflow/v1/gameflow-phase
-            sleep 2
+            Start-Sleep 2
         }
         catch {#si jeu fermé return gameStop pour arreter le script
             "gameStop"
-            sleep 2
+            Start-Sleep 2
         }
     }
 }
@@ -169,7 +170,7 @@ function calculStats #return hashtable avec nbWIN et nbPlayed
         { 
             $correctLane = @()
             #test pour chaque lane pour recupérer QueueSummary
-            "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | % {
+            "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | ForEach-Object {
                 try 
                 {
                     #recuperation des stats
@@ -213,7 +214,7 @@ function calculStats #return hashtable avec nbWIN et nbPlayed
 
 while ($true)
 {
-    switch ((Receive-Job jobState -ErrorAction SilentlyContinue)| select -Last 1) 
+    switch ((Receive-Job jobState -ErrorAction SilentlyContinue)| Select-Object -Last 1) 
     {
         #si fait rien
         "None" {$_;Start-Sleep -Seconds 3;break}
@@ -247,7 +248,7 @@ while ($true)
             if(!($typeGame -cin "400","420","440")) #{400 = 5v5 Draft Pick games; 420 = RANKED_SOLO_5x5; 440 = 5v5 Ranked Flex games}
             {
                 Start-Sleep -Seconds 2
-                while(((Receive-Job jobState)| select -Last 1) -cin "InProgress")#si le status est InProgress : attendre 
+                while(((Receive-Job jobState)| Select-Object -Last 1) -cin "InProgress")#si le status est InProgress : attendre 
                 {   
                     Write-Host "attenteFinDeGameNonValid"
                     Start-Sleep 5  
@@ -283,7 +284,7 @@ while ($true)
             #####                                                                                                         #####
             ###################################################################################################################
 
-            $teamOne,$teamTwo | % {#Pour chauqe teams :
+            $teamOne,$teamTwo | ForEach-Object {#Pour chauqe teams :
                 #$compteur sert a savoir quelle team est concernée (1 = teamOne, 2 = teamTwo)
                 $compteur++
                 if($currentPuuid -cin $_.puuid)
@@ -291,7 +292,7 @@ while ($true)
                     #pour savoir a quelle team appartient l'utilisateur local
                     $currentUserTeam = $compteur
                 } 
-                $_ | % {#Pour chaque joueurs : 
+                $_ | ForEach-Object {#Pour chaque joueurs : 
 
                     $puuid = $_.puuid
                     $lastSeasonId = [int]$currentSaisonId - 1
@@ -354,17 +355,17 @@ while ($true)
 
             $tableauStats["resume"] = @{}
             Write-Host "debut resume"
-            $tableauStats.keys -match "team" | %{
+            $tableauStats.keys -match "team" | ForEach-Object{
                 $teamGlobalStats = $_
-                "ChampionSummary","PositionSummary","QueueSummary" | % {
+                "ChampionSummary","PositionSummary","QueueSummary" | ForEach-Object {
                     $facteurTotal = 0
                     $nbPlayedTotal = 0
                     $summaryTree = $_
-                    "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | % {
+                    "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | ForEach-Object {
                         $positionTree = $_
                         $winrate = $tableauStats."$($teamGlobalStats)".$($positionTree).$($summaryTree).winrate
                         Write-Host $winrate 'winrate'
-                        if($winrate -eq "NULL"){continue}
+                        if($winrate -eq "NULL"){return}
                         #retirer le "%"
                         [int]$intWinrate = ($winrate | Select-String -Pattern '\d+' -AllMatches).Matches.Value
                         [int]$nbPlayed = $tableauStats."$($teamGlobalStats)".$($positionTree).$($summaryTree).nbPlayed
@@ -454,18 +455,18 @@ while ($true)
             $rootNode = $treeView.Nodes.Add("Game")
             $rootNode.BackColor = [System.Drawing.Color]::DarkBlue
             $rootNode.ForeColor = [System.Drawing.Color]::LightCyan
-            $tableauStats.keys -match "team" | %{
+            $tableauStats.keys -match "team" | ForEach-Object{
                 $teamTree = $_
                 $childNode = $rootNode.Nodes.Add("$_") #teams
                 #$tabForStatsPostGame = @{}
                 ##############################---Arbre "GAME"---#########################################
-                "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | % {
+                "TOP","JUNGLE","MID","BOTTOM","SUPPORT" | ForEach-Object {
                     $positionTree = $_
                     $childNode1 = $childNode.Nodes.Add("$_")
-                    "ChampionSummary","PositionSummary","QueueSummary" | % {
+                    "ChampionSummary","PositionSummary","QueueSummary" | ForEach-Object {
                         $summaryTree = $_
                         $childNode2 = $childNode1.Nodes.Add("$_")
-                        "winrate","nbPlayed","nbWIN" | % {
+                        "winrate","nbPlayed","nbWIN" | ForEach-Object {
                             $typeStatTree = $_
                             $childNode3 = $childNode2.Nodes.Add("$_")
                             $childNode4 = $childNode3.Nodes.Add($tableauStats."$($teamTree)".$($positionTree).$($summaryTree).$($typeStatTree))
@@ -493,7 +494,7 @@ while ($true)
                 ##############################---Arbre "Resume"---#########################################
                 
                 $rootNodeResume2 = $rootNodeResume.Nodes.Add("$_")#teams
-                "ChampionSummary","PositionSummary","QueueSummary" | % {
+                "ChampionSummary","PositionSummary","QueueSummary" | ForEach-Object {
                     $rootNodeResume3 = $rootNodeResume2.Nodes.Add("$_") #"ChampionSummary","PositionSummary","QueueSummary"
                     $resumePourcentage = $tableauStats.resume.$teamTree.$_
                     $rootNodeResume4 = $rootNodeResume3.Nodes.Add([string]$resumePourcentage + "%")
@@ -532,7 +533,7 @@ while ($true)
             ###---Une fois la recuperation des stats effectuées : attendre la fin de la game---###
 
 
-            while(((Receive-Job jobState)| select -Last 1) -cin "InProgress","gameStop")#Tant que le gameFlow est toujours en "InProgress"ou que le jeu est fermé : attendre
+            while(((Receive-Job jobState)| Select-Object -Last 1) -cin "InProgress","gameStop")#Tant que le gameFlow est toujours en "InProgress"ou que le jeu est fermé : attendre
             {
                     Start-Sleep -Seconds 10
                     Write-Host "attenteFinDeGamePourStatDansHtml"
@@ -555,7 +556,7 @@ while ($true)
             
 
             ###############################----Construction du HTML,CSS,JAVASCRIPT---#############################
-            $tableauStats.keys -match "team" | %{
+            $tableauStats.keys -match "team" | ForEach-Object{
                 $team = "$_"
                 $D = $tableauStats.resume.$team
                 $champion = ($D.ChampionSummary | Select-String -Pattern '\d+' -AllMatches).Matches.Value
@@ -566,7 +567,8 @@ while ($true)
                 {
                     New-Item -ItemType Directory -Path "$env:USERPROFILE\documents\lolStat\" -Force
                 }
-                $pathResult = "$env:USERPROFILE\documents\lolStat\resultats.html"
+
+                $pathResult = "$env:USERPROFILE\documents\lolStat\$($gameMode).html"
                 if (!(Test-Path $pathResult))  {
                     $html = @"
                 <!DOCTYPE html>

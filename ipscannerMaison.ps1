@@ -112,7 +112,7 @@ Function calculIpToPing
 $ips = calculIpToPing
 
 $ips | % -Parallel {
-    if (Test-Connection -TargetName $_ -Count 1 -Quiet)
+    if (Test-Connection -TargetName $_ -Count 2 -Quiet)
     {	
         #####################################Get-DnsName##############################################
         $dnsName = (Resolve-DnsName $_ -ErrorAction SilentlyContinue).NameHost
