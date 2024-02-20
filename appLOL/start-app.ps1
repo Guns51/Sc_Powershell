@@ -8,5 +8,6 @@ while(1)
         {
             sleep 7
         }
-    }
+    }else{sleep 15}
+    
 }

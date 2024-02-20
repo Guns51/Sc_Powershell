@@ -538,7 +538,7 @@ while ($true)
                     Start-Sleep -Seconds 10
                     Write-Host "attenteFinDeGamePourStatDansHtml"
             }
-            if(((Receive-Job jobState)| Select-Object -Last 1)) -cin "gameStop")
+            if(((Receive-Job jobState)| Select-Object -Last 1) -cin "gameStop")
             {
                 exit
             }
