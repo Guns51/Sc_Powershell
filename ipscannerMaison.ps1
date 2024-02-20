@@ -130,7 +130,7 @@ $ips | % -Parallel {
             }
         }else 
         {
-            $addressMac =  ((Get-NetIPConfiguration | ? "NetProfile").NetAdapter.MacAddress)[$using:choixCard-1]
+            $addressMac =  ((Get-NetIPConfiguration | ? "NetProfile").NetAdapter.MacAddress)#[$using:choixCard-1]
         }
         ######################################Get-CoSSH##################################################
 	    $resultTestSSH = Test-NetConnection -ComputerName $_ -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue

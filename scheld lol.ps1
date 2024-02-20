@@ -23,3 +23,4 @@ $request = Invoke-RestMethod -UseBasicParsing -Uri "https://esports-api.lolespor
 
 $uncomingMatch = $request.data.schedule.events | ? state -eq unstarted
 $uncomingMatch_KC = $uncomingMatch | ? {$_.match.teams.code -eq  "KC"}
+Write-Host $uncomingMatch_KC

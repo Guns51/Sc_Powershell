@@ -533,10 +533,14 @@ while ($true)
             ###---Une fois la recuperation des stats effectuées : attendre la fin de la game---###
 
 
-            while(((Receive-Job jobState)| Select-Object -Last 1) -cin "InProgress","gameStop")#Tant que le gameFlow est toujours en "InProgress"ou que le jeu est fermé : attendre
+            while(((Receive-Job jobState)| Select-Object -Last 1) -cin "InProgress")#Tant que le gameFlow est toujours en "InProgress" : attendre
             {
                     Start-Sleep -Seconds 10
                     Write-Host "attenteFinDeGamePourStatDansHtml"
+            }
+            if(((Receive-Job jobState)| Select-Object -Last 1)) -cin "gameStop")
+            {
+                exit
             }
             ###---Recuperation du gagnant---###
             while($true)

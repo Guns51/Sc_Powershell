@@ -17,7 +17,7 @@ function installPwsh7
     $pwshPath = "C:\progra~1\powershell\7\pwsh.exe"
     while(!(Test-Path -Path "$pwshPath"))
     {
-        Invoke-RestMethod -Uri "https://github.com/PowerShell/PowerShell/releases/download/v7.3.7/PowerShell-7.3.7-win-x64.msi" -Method Get -OutFile "$env:TEMP\ps7.msi"
+        Invoke-RestMethod -Uri "https://github.com/PowerShell/PowerShell/releases/download/v7.4.1/PowerShell-7.4.1-win-x64.msi" -Method Get -OutFile "$env:TEMP\ps7.msi"
         msiexec.exe /i "$env:TEMP\ps7.msi" /quiet
         Start-Sleep 20
     }

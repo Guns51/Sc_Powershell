@@ -1,3 +1,5 @@
+ <#
+ <#
  <#  
 $a= 1  
 switch ($a) {
@@ -14,7 +16,7 @@ switch ($a) {
     Default {Write-Host "coucou"}
 }   
    #>
-
+<#
    function Test-Function {
     $fishtank = 1..10
     
@@ -35,3 +37,11 @@ switch ($a) {
 }
 
 Test-Function
+
+
+#>
+
+
+
+
+
