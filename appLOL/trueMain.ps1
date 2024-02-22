@@ -230,7 +230,7 @@ while ($true)
                 POST /lol-matchmaking/v1/ready-check/accept -ErrorState Ignore
                 POST /lol-lobby-team-builder/v1/ready-check/accept -ErrorState Ignore
             }
-            catch {Write-Warning "postGame(possible fail)"}
+            catch {Write-Host "postGame(possible fail)"}
             break
         }
         #si dans champ select
